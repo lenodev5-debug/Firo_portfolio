@@ -1,0 +1,101 @@
+
+
+.display-img-one{
+    animation: ContinierSize linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+}
+
+@keyframes ContinierSize {
+    from{
+        clip-path: inset(100% 100% 0 0);
+        opacity: 0;
+    } to {
+        clip-path: inset(0 0 0 0);
+        opacity: 1;
+    }
+}
+
+.display-img-two{
+    animation: ContinierSiz2 linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+}
+
+@keyframes ContinierSiz2 {
+    from{
+        clip-path: inset( 100% 0 0 100% );
+        opacity: 0;
+    } to {
+        clip-path: inset(0 0 0 0);
+        opacity: 1;
+    }
+}
+
+.i1, .i2{
+    animation: ContinierSize linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+}
+
+.i4, .i5{
+    animation: ContinierSiz2 linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+}
+
+.i3{
+    animation: heightIncrease linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+}
+
+@keyframes heightIncrease {
+    from{
+        clip-path: inset(0 0 100% 0);
+        opacity: 0;
+    } to {
+        clip-path: inset(0 0 0 0);
+        opacity: 1;
+    }
+}
+
+.about-items {
+    width: 30%;
+    height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    padding: 20px;
+    margin: 100px 20px 20px 20px;
+    border: 1px solid rgba(0, 0, 0, 0.123);
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    animation: zoomInSlide linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+}
+
+@keyframes zoomInSlide {
+    from {
+        width: 10%; /* Start very small */
+        height: 30vh; /* Start shorter */
+        margin: 150px 20px 20px 20px;
+        opacity: 0;
+        transform: translateY(50px) scale(0.8);
+        filter: blur(5px);
+    }
+    to {
+        width: 30%; /* End at your desired width */
+        height: 50vh; /* End at your desired height */
+        margin: 100px 20px 20px 20px;
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+
+

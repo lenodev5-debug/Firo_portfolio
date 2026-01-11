@@ -1,0 +1,429 @@
+.card-display{
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    margin: 100px 0;
+}
+
+.card{
+    width: 400px; 
+    height: 450px; 
+    backdrop-filter: blur(22px);
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: start;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: #33333319;
+    animation: fadeInUp linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+}
+
+.card:hover{
+    transform: scale(1.05);
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.card img{
+    width: 60px; 
+    height: 60px; 
+    margin: 60px 0 40px 40px; 
+}
+
+.card h1{
+    font-size: 32px; 
+    font-weight: 600;
+    margin: 180px 0 15px 40px; 
+    color: #fff;
+}
+
+.card h3{
+    font-size: 20px; 
+    font-weight: 400;
+    margin: 0 0 0 40px; 
+    color: #ccc;
+}
+
+@media only screen and (max-width: 768px) {
+    .card-display{
+        flex-direction: column;
+        gap: 60px; 
+    }
+    
+    .card{
+        width: 90%; 
+        max-width: 400px;
+        height: 420px; 
+    }
+    
+    .card img{
+        margin: 40px 0 30px 30px; 
+        width: 55px;
+        height: 55px;
+    }
+    
+    .card h1{
+        margin: 150px 0 10px 30px; 
+        font-size: 28px;
+    }
+    
+    .card h3{
+        margin: 0 0 0 30px; 
+        font-size: 18px;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        transform: scale(0.3);
+    } to {
+        transform: scale(1);
+    }
+}
+
+/* first about page */
+.about-container {
+    width: 100%;
+    height: 150vh;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    justify-content: center;
+    margin-top: 100px;
+    gap: 50px;
+
+}
+
+.section-about {
+    width: 50%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.section-about > .profile-image {
+    width: 450px;
+    height: 550px;
+    border-radius: 10%;
+    background-image: url('../assets/Image/kidist.jpg');
+    background-size: cover;
+    background-position: top;
+    border: 5px solid rgb(188, 2, 255);
+    box-shadow: 0 10px 30px rgba(188, 2, 255, 0.3);
+}
+
+.section-about h1 {
+    font-size: 48px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0;
+}
+
+.tagline {
+    color: #b3b3b3;
+    font-size: 18px;
+    font-weight: 300;
+    margin-top: -20px;
+}
+
+.section-about .description {
+    line-height: 30px;
+    font-size: 16px;
+    color: #ffffff;
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.contact-icons {
+    display: flex;
+    gap: 25px;
+    margin-top: 10px;
+}
+
+.social-link {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.social-link:hover {
+    transform: translateY(-5px);
+}
+
+.contact-icons img {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    padding: 5px;
+    transition: all 0.3s ease;
+}
+
+.contact-icons img:hover {
+    background-color: rgba(188, 2, 255, 0.2);
+    border-color: rgb(188, 2, 255);
+}
+
+/* Experience Cards */
+.experience-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 700px;
+    margin: 20px 0;
+}
+
+.experience-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.experience-card:hover,
+.experience-card:focus {
+    transform: translateY(-5px);
+    border-color: rgba(188, 2, 255, 0.3);
+    box-shadow: 0 10px 25px rgba(188, 2, 255, 0.2);
+    outline: none;
+}
+
+.experience-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(188, 2, 255, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.experience-card:hover::before {
+    left: 100%;
+}
+
+.skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.skill-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+
+.years-badge {
+    background: rgba(188, 2, 255, 0.2);
+    color: rgb(188, 2, 255);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.experience-card:hover .years-badge {
+    background: rgb(188, 2, 255);
+    color: white;
+    transform: scale(1.05);
+}
+
+.card-expand {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-expand.expanded {
+    width: 100%;
+    max-height: max-content;
+    opacity: 1;
+}
+
+.skill-description {
+    color: #b3b3b3;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.years-progress {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, rgb(188, 2, 255), rgb(148, 0, 211));
+    border-radius: 3px;
+    transition: width 1s ease-in-out;
+}
+
+/* Contact Button */
+.contact-btn {
+    width: 180px;
+    height: 50px;
+    background: linear-gradient(135deg, rgb(16, 113, 224), rgb(188, 2, 255));
+    border: 0;
+    border-radius: 30px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(1);
+    cursor: pointer;
+    margin-top: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(16, 113, 224, 0.3);
+    letter-spacing: 1px;
+}
+
+.contact-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.contact-btn:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 0.3;
+    }
+    100% {
+        transform: scale(40, 40);
+        opacity: 0;
+    }
+}
+
+/* Animations */
+.h1-two {
+    animation: FarWays linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+}
+
+@keyframes FarWays {
+    from {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.contact-icons img:nth-child(1) {
+    animation: iconFadeIn linear;
+    animation-timeline: view();
+    animation-range: entry 0% cover 10%;
+}
+
+.contact-icons img:nth-child(3) {
+    animation: iconFadeIn2 ease;
+    animation-timeline: view();
+    animation-range: entry 0% cover 20%;
+}
+
+@keyframes iconFadeIn {
+    from {
+        transform: translateX(70px);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes iconFadeIn2 {
+    from {
+        transform: translateX(-70px);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .about-container {
+        flex-direction: column;
+        gap: 60px;
+    }
+    
+    .section-about {
+        width: 100%;
+        padding: 0 20px;
+    }
+    
+    .experience-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .section-about > .profile-image {
+        width: 280px;
+        height: 280px;
+    }
+    
+    .section-about h1 {
+        font-size: 36px;
+    }
+    
+    .description {
+        font-size: 16px;
+        color: #ffffff;
+    }
+}
+
+

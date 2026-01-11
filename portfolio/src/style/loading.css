@@ -1,0 +1,225 @@
+@import url('https://fonts.cdnfonts.com/css/ica-rubrik-black');
+@import url('https://fonts.cdnfonts.com/css/poppins');
+
+/* Body styles - Will show after loading */
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #333333;
+    background-image: url('../assets/bak/hero-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Initially hide body background during loading */
+body.loading-in-progress {
+    opacity: 0;
+    overflow: hidden;
+}
+
+/* Show body background after loading */
+body.loading-complete {
+    opacity: 1;
+    overflow: auto;
+}
+
+/* Loading wrapper - covers entire screen */
+.loading-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+}
+
+/* Black overlay during loading */
+.black-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: -1;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* During active loading */
+.loading-wrapper.loading-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* When loading finishes - fade out */
+.loading-wrapper.loading-finished {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Hide black overlay when loading finishes */
+.loading-wrapper.loading-finished .black-overlay {
+    opacity: 0;
+}
+
+/* Your animation styles (modified) */
+.main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: transparent !important; /* Ensure transparent */
+}
+
+.up {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent !important;
+}
+
+.loaders,
+.loadersB {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent !important;
+}
+
+.loader {
+    position: absolute;
+    width: 1.15em;
+    height: 13em;
+    border-radius: 50px;
+    background: transparent;
+}
+
+.loader:after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.15em;
+    height: 5em;
+    background: transparent;
+    border-radius: 50px;
+}
+
+.loader::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 1.15em;
+    height: 4.5em;
+    background: transparent;
+    border-radius: 50px;
+}
+
+.loaderA {
+    position: absolute;
+    width: 1.15em;
+    height: 13em;
+    border-radius: 50px;
+    background: transparent;
+}
+
+.ball0,
+.ball1,
+.ball2,
+.ball3,
+.ball4,
+.ball5,
+.ball6,
+.ball7,
+.ball8,
+.ball9 {
+    width: 8.15em;
+    height: 8.15em;
+    box-shadow:
+        rgba(0, 0, 0, 0.17) 0px -10px 10px 0px inset,
+        rgba(0, 0, 0, 0.15) 0px -15px 15px 0px inset,
+        rgba(0, 0, 0, 0.1) 0px -40px 20px 0px inset,
+        rgba(0, 0, 0, 0.06) 0px 2px 1px,
+        rgba(0, 0, 0, 0.09) 0px 4px 2px,
+        rgba(0, 0, 0, 0.09) 0px 8px 4px,
+        rgba(0, 0, 0, 0.09) 0px 16px 8px,
+        rgba(0, 0, 0, 0.09) 0px 32px 16px,
+        0px -1px 15px -8px rgba(0, 0, 0, 0.09);
+    border-radius: 50%;
+    transition: transform 800ms cubic-bezier(1, -0.4, 0, 1.4);
+    background-color: rgb(232, 232, 232, 1);
+    animation: 1.63s move ease-in-out infinite;
+}
+
+/* Rotate animations */
+.loader:nth-child(2) { transform: rotate(20deg); }
+.loader:nth-child(3) { transform: rotate(40deg); }
+.loader:nth-child(4) { transform: rotate(60deg); }
+.loader:nth-child(5) { transform: rotate(80deg); }
+.loader:nth-child(6) { transform: rotate(100deg); }
+.loader:nth-child(7) { transform: rotate(120deg); }
+.loader:nth-child(8) { transform: rotate(140deg); }
+.loader:nth-child(9) { transform: rotate(160deg); }
+
+.loaderA:nth-child(2) { transform: rotate(20deg); }
+.loaderA:nth-child(3) { transform: rotate(40deg); }
+.loaderA:nth-child(4) { transform: rotate(60deg); }
+.loaderA:nth-child(5) { transform: rotate(80deg); }
+.loaderA:nth-child(6) { transform: rotate(100deg); }
+.loaderA:nth-child(7) { transform: rotate(120deg); }
+.loaderA:nth-child(8) { transform: rotate(140deg); }
+.loaderA:nth-child(9) { transform: rotate(160deg); }
+
+/* Ball animation delays */
+.ball1 { animation-delay: 0.2s; }
+.ball2 { animation-delay: 0.4s; }
+.ball3 { animation-delay: 0.6s; }
+.ball4 { animation-delay: 0.8s; }
+.ball5 { animation-delay: 1s; }
+.ball6 { animation-delay: 1.2s; }
+.ball7 { animation-delay: 1.4s; }
+.ball8 { animation-delay: 1.6s; }
+
+@keyframes move {
+    0% {
+        transform: translateY(0em);
+    }
+    50% {
+        transform: translateY(12em);
+    }
+    100% {
+        transform: translateY(0em);
+    }
+}
+
+/* Smooth transition for the animation finish */
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+.loading-wrapper.loading-finished .main {
+    animation: fade-out 0.5s ease-in-out forwards;
+}
+
+/* Prevent scroll during loading */
+.no-scroll {
+    overflow: hidden;
+    height: 100vh;
+}
