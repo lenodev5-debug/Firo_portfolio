@@ -1,5 +1,3 @@
-import colors from 'tailwindcss/colors'
-
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -9,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        ...colors, // ✅ brings back all Tailwind default colors
+        // Your custom colors here
       },
     },
   },

@@ -12,6 +12,10 @@ body {
     background-position: center;
     background-attachment: fixed;
     transition: opacity 0.5s ease-in-out;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    position: relative
 }
 
 /* Initially hide body background during loading */

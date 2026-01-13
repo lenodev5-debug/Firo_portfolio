@@ -9,6 +9,10 @@ import CardDisplay from "./components/carddisplay";
 import About from "./components/About";
 import Awards from "./components/awards";
 import Contact from "./components/contact";
+import Dashboard from "./components/Dashboard";
+import Auth from "./components/page/auth";
+import ProtectedRoute from "./service/ProtectedRoute";
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -24,22 +28,30 @@ function App() {
     <Router>
       {isLoading ? (
         <div style={{ backgroundColor: "#333"}}>
-        <Loading />
+          <Loading />
         </div>
       ) : (
         <Routes>
           <Route path="/" element={
             <>
-            <Header />
-            <Home />
-            <CardDisplay />
-            <About />
-            <Service/>
-            <ProjectDisplay />
-            <Awards />
-            <Contact />
+              <Header />
+              <Home />
+              <CardDisplay />
+              <About />
+              <Service/>
+              <ProjectDisplay />
+              <Awards />
+              <Contact />
             </>
-            } />
+          } />
+          <Route path="/auth/user/login" element={<Auth />} />
+          
+          {/* Protected Dashboard Route */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
         </Routes>
       )}
     </Router>

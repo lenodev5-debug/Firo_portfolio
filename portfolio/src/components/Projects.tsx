@@ -2,21 +2,21 @@ export default function ProjectDisplay(){
     return(
         <div className="continier-project">
             <div className="display-card">
-    <div className='display-img-one'>
-        <img src="../src/assets/uplaods/Travel.jpg" alt="Travel destination" />
-        <h1>25k Visitors Trust Us</h1>
-        <h1>For Memorable Journeys</h1>
-        <button>Explore Destinations</button>
-        <p>Discover the best travel experiences tailored for you and your family. Unforgettable adventures await.</p>
-    </div>
-    <div className='display-img-two'>
-        <img src="../src/assets/uplaods/Adventure.jpg" alt="Featured adventure" />
-        <div className="image-overlay">
-            <h3>Featured Destination</h3>
-            <p>Top rated by our community</p>
-        </div>
-    </div>
-</div>
+                <div className='display-img-one'>
+                    <img src="../src/assets/uplaods/Travel.jpg" alt="Travel destination" />
+                    <h1>25k Visitors Trust Us</h1>
+                    <h1>For Memorable Journeys</h1>
+                    <button>Explore Destinations</button>
+                    <p>Discover the best travel experiences tailored for you and your family. Unforgettable adventures await.</p>
+                </div>
+                <div className='display-img-two'>
+                    <img src="../src/assets/uplaods/Adventure.jpg" alt="Featured adventure" />
+                    <div className="image-overlay">
+                        <h3>Featured Destination</h3>
+                        <p>Top rated by our community</p>
+                    </div>
+                </div>
+            </div>
             
             <div className="display-card-two">
                 <div className="pro-items i1">

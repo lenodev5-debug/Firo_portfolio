@@ -1,3 +1,4 @@
+/* Your original styles - unchanged */
 .about-container {
     width: 100%;
     min-height: 100vh;
@@ -456,13 +457,54 @@
     }
 }
 
+/* ============================================================================
+   RESPONSIVE MEDIA QUERIES ONLY - Added at the end
+   ============================================================================ */
 
-
-/* Responsive Design */
+/* Large screens (1200px and above) - Desktop layout */
 @media (max-width: 1200px) {
     .about-container {
-        flex-direction: column;
         padding-top: 80px;
+    }
+    
+    .about-container .section-about p {
+        margin: 0 150px;
+        font-size: 26px;
+        line-height: 40px;
+    }
+    
+    .about-main {
+        width: 85%;
+        margin: 30px;
+    }
+    
+    .about-sidebar {
+        width: 12%;
+    }
+    
+    .profile-circle {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .skill-bar {
+        width: 50px;
+        height: 180px;
+    }
+}
+
+/* Tablet landscape (1024px and below) */
+@media (max-width: 1024px) {
+    .about-container {
+        flex-direction: column;
+        gap: 20px;
+        padding-top: 70px;
+    }
+    
+    .about-container .section-about p {
+        margin: 0 80px;
+        font-size: 22px;
+        line-height: 35px;
     }
     
     .about-sidebar {
@@ -470,55 +512,215 @@
         min-height: auto;
         flex-direction: row;
         justify-content: center;
-        gap: 30px;
-        margin-bottom: 30px;
-        padding: 20px;
+        gap: 25px;
+        padding: 15px 0;
+        order: 2;
+    }
+    
+    .skill-icon {
+        width: 60px;
+        height: 60px;
     }
     
     .about-main {
         width: 95%;
         flex-direction: column;
         margin: 20px;
+        order: 1;
     }
     
-    .profile-section, .projects-section {
+    .profile-section,
+    .projects-section {
         width: 100%;
     }
     
-    .profile-circle {
-        width: 250px;
-        height: 250px;
-    }
-}
-
-@media (max-width: 768px) {
-    .about-main {
-        border-radius: 30px;
-        margin: 10px;
+    .projects-section {
+        border-radius: 0 0 50px 50px;
     }
     
     .skills-charts {
         gap: 15px;
+        padding: 15px;
+    }
+}
+
+/* Tablet portrait (768px and below) */
+@media (max-width: 768px) {
+    .about-container .section-about p {
+        margin: 0 40px;
+        font-size: 20px;
+        line-height: 32px;
     }
     
-    .skill-bar {
-        width: 50px;
+    .about-main {
+        margin: 15px;
+        border-radius: 30px;
     }
     
-    .projects-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .projects-section, .profile-section {
+    .profile-section {
         padding: 30px;
+    }
+    
+    .profile-circle {
+        width: 220px;
+        height: 220px;
     }
     
     .profile-name {
         font-size: 2rem;
     }
     
-    .stats-container {
-        flex-direction: column;
+    .skill-bar {
+        width: 45px;
+        height: 160px;
+    }
+    
+    .projects-section {
+        padding: 35px;
+        border-radius: 0 0 30px 30px;
+    }
+    
+    .projects-grid {
+        grid-template-columns: 1fr;
         gap: 20px;
+    }
+    
+    .stats-container {
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    
+    .stat-item {
+        flex: 1;
+        min-width: 45%;
+    }
+}
+
+/* Mobile (480px and below) */
+@media (max-width: 480px) {
+    .about-container {
+        padding-top: 60px;
+    }
+    
+    .about-container .section-about p {
+        margin: 0 25px;
+        font-size: 18px;
+        line-height: 28px;
+    }
+    
+    .about-sidebar {
+        gap: 15px;
+        padding: 10px 0;
+    }
+    
+    .skill-icon {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .icon-image {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .about-main {
+        margin: 10px;
+        border-radius: 20px;
+    }
+    
+    .profile-section {
+        padding: 25px;
+    }
+    
+    .profile-circle {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .profile-name {
+        font-size: 1.7rem;
+    }
+    
+    .skills-charts {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+    }
+    
+    .chart-item {
+        width: 45%;
+        max-width: 120px;
+    }
+    
+    .skill-bar {
+        width: 40px;
+        height: 140px;
+    }
+    
+    .skill-name {
+        min-width: 80px;
+        font-size: 0.9rem;
+    }
+    
+    .projects-section {
+        padding: 25px;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .section-header h2 {
+        font-size: 2rem;
+    }
+    
+    .project-card {
+        padding: 20px;
+    }
+    
+    .stats-container {
+        padding: 20px;
+    }
+    
+    .stat-item {
+        min-width: 100%;
+    }
+}
+
+/* Small mobile (320px and below) */
+@media (max-width: 320px) {
+    .about-container .section-about p {
+        margin: 0 15px;
+        font-size: 16px;
+        line-height: 24px;
+    }
+    
+    .about-sidebar {
+        gap: 10px;
+    }
+    
+    .skill-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .icon-image {
+        width: 25px;
+        height: 25px;
+    }
+    
+    .profile-circle {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+    }
+    
+    .skill-bar {
+        width: 35px;
+        height: 120px;
+    }
+    
+    .chart-item {
+        width: 48%;
     }
 }
