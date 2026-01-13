@@ -23,6 +23,8 @@ const storage = multer.diskStorage({
             folder = 'projects';
         } else if (req.baseUrl.includes('owner')) {
             folder = 'profiles';
+        } else if (req.baseUrl.includes('contact')) {
+            folder = 'contacts'; // Add this for contact form uploads
         }
         
         const uploadDir = createUploadsDir(folder);
@@ -44,6 +46,18 @@ const imageFilter = (req, file, cb) => {
         return cb(null, true);
     } else {
         cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp, svg)'), false);
+    }
+};
+
+const contactFileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp|pdf|fig|psd|ai|xd|doc|docx|txt/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+        return cb(null, true);
+    } else {
+        cb(new Error('Only image files, PDFs, and design files are allowed'), false);
     }
 };
 
@@ -85,18 +99,28 @@ const uploadAnyFile = multer({
     },
     fileFilter: allFilesFilter
 });
+
+const uploadContactFile = multer({
+    storage: storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 3 // Allow up to 3 files
+    },
+    fileFilter: contactFileFilter
+});
+
 const handleMulterError = (err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({
                 success: false,
-                message: 'File too large. Maximum size is 5MB for images, 10MB for other files'
+                message: 'File too large. Maximum size is 10MB for contact files'
             });
         }
         if (err.code === 'LIMIT_FILE_COUNT') {
             return res.status(400).json({
                 success: false,
-                message: 'Too many files. Maximum is 5 files'
+                message: 'Too many files. Maximum is 3 files'
             });
         }
         if (err.code === 'LIMIT_UNEXPECTED_FILE') {
@@ -118,5 +142,6 @@ module.exports = {
     uploadImage,
     uploadMultipleImages,
     uploadAnyFile,
+    uploadContactFile,
     handleMulterError
 };

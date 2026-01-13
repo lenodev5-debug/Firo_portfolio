@@ -2,38 +2,50 @@ const mongoose = require('mongoose');
 
 const userSchema = mongoose.Schema({
     username: {
-        type:String,
-        required: true
+        type: String,
+        required: [true, "Name is required"],
+        trim: true
     },
     email: {
         type: String,
-        required: true
+        required: [true, "Email is required"],
+        trim: true,
+        lowercase: true,
+        match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
     },
     phone: {
         type: String,
-        required: true
+        required: [true, "Phone number is required"],
+        trim: true
     },
     project_Type: {
         type: String,
-        enum: ["Web Design", "Mobile App", "Graphic Design", "Fimga Design"],
-        required: true
+        required: [true, "Project type is required"],
+        enum: ["Web Design", "Mobile App", "Graphic Design", "Figma Design", "Branding"]
     },
     budget: {
         type: String,
-        required: true
+        required: [true, "Budget is required"]
     },
-    timeline:{
+    timeline: {
         type: String,
-        required: true
+        required: [true, "Timeline is required"]
     },
     fileImage: {
         type: String,
-        required: true
+        default: ""
     },
+    fileImages: [{
+        type: String
+    }],
     message: {
         type: String,
-        required: true
+        required: [true, "Message is required"],
+        trim: true,
+        minlength: [10, "Message should be at least 10 characters long"]
     }
-}, { timestamps: true })
+}, { 
+    timestamps: true 
+});
 
-module.exports = mongoose.model("userdata", userSchema);
+module.exports = mongoose.model("ContactMessage", userSchema);
