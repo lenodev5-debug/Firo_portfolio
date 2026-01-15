@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import Loading from "./components/Loading";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./components/Home";
@@ -32,7 +32,7 @@ function App() {
         </div>
       ) : (
         <Routes>
-          <Route path="/" element={
+          <Route path='/' element={
             <>
               <Header />
               <Home />
@@ -44,8 +44,10 @@ function App() {
               <Contact />
             </>
           } />
-          <Route path="/auth/user/login" element={<Auth />} />
           
+          {/* Auth Routes */}
+          <Route path="/auth/user/login" element={<Auth />} />
+
           {/* Protected Dashboard Route */}
           <Route path="/dashboard" element={
             <ProtectedRoute>

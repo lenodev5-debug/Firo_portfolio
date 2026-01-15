@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Auth = () => {
+const Login = () => {
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -9,17 +10,24 @@ const Auth = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const navigate = useNavigate();
 
-    // Floating animation effect (similar to contact page)
+    // Redirect if already logged in
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            navigate('/dashboard');
+        }
+    }, [navigate]);
+
+    // Floating animation effect
     useEffect(() => {
         const createFloatingShapes = () => {
             const container = document.querySelector('.auth-bg-animation');
             if (!container) return;
 
-            // Clear existing shapes
             container.innerHTML = '';
 
-            // Create different types of floating shapes
             const shapeTypes = ['circle', 'square', 'triangle', 'hexagon'];
             
             for (let i = 0; i < 15; i++) {
@@ -27,16 +35,12 @@ const Auth = () => {
                 const shapeType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
                 shape.className = `floating-shape shape-${shapeType}`;
                 
-                // Random size
                 const size = Math.random() * 60 + 20;
                 shape.style.width = `${size}px`;
                 shape.style.height = `${size}px`;
-                
-                // Random position
                 shape.style.left = `${Math.random() * 100}%`;
                 shape.style.top = `${Math.random() * 100}%`;
                 
-                // Random animation properties
                 const duration = Math.random() * 20 + 10;
                 const delay = Math.random() * 5;
                 const direction = Math.random() > 0.5 ? 'normal' : 'reverse';
@@ -46,7 +50,6 @@ const Auth = () => {
                     rotateAnimation ${duration * 1.5}s linear ${delay}s infinite
                 `;
                 
-                // Random color and opacity
                 const colors = [
                     'rgba(0, 217, 255, 0.1)',
                     'rgba(0, 150, 255, 0.08)',
@@ -59,22 +62,17 @@ const Auth = () => {
                 container.appendChild(shape);
             }
 
-            // Create floating lines
             for (let i = 0; i < 8; i++) {
                 const line = document.createElement('div');
                 line.className = 'floating-line';
                 
-                // Random length and thickness
                 const length = Math.random() * 200 + 100;
                 const thickness = Math.random() * 3 + 1;
                 line.style.width = `${length}px`;
                 line.style.height = `${thickness}px`;
-                
-                // Random position
                 line.style.left = `${Math.random() * 100}%`;
                 line.style.top = `${Math.random() * 100}%`;
                 
-                // Random animation
                 const duration = Math.random() * 25 + 15;
                 const delay = Math.random() * 10;
                 
@@ -83,7 +81,6 @@ const Auth = () => {
                     linePulse ${duration / 2}s ease-in-out ${delay}s infinite alternate
                 `;
                 
-                // Random color
                 line.style.background = `linear-gradient(90deg, 
                     rgba(0, 217, 255, 0.1) 0%,
                     rgba(0, 217, 255, 0.3) 50%,
@@ -118,16 +115,26 @@ const Auth = () => {
         setError(null);
         setSuccess(null);
 
+        // Validation
+        if (!formData.email || !formData.password) {
+            setError('Please fill in all fields');
+            setIsLoading(false);
+            return;
+        }
+
+        if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            setError('Please enter a valid email address');
+            setIsLoading(false);
+            return;
+        }
+
+        if (formData.password.length < 6) {
+            setError('Password must be at least 6 characters');
+            setIsLoading(false);
+            return;
+        }
+
         try {
-            // Validate
-            if (!formData.email || !formData.password) {
-                throw new Error('Please fill in all fields');
-            }
-
-            if (!/\S+@\S+\.\S+/.test(formData.email)) {
-                throw new Error('Please enter a valid email address');
-            }
-
             // Call your backend login API
             const response = await fetch('http://localhost:4444/api/owners/login', {
                 method: 'POST',
@@ -144,40 +151,40 @@ const Auth = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                // Check for "user not found" or similar messages
-                if (data.message && (data.message.toLowerCase().includes('not found') || 
-                    data.message.toLowerCase().includes('invalid') ||
-                    data.message.toLowerCase().includes('incorrect'))) {
-                    alert('User not found or credentials are incorrect');
+                // Check for specific error messages
+                if (data.message && (data.message.toLowerCase().includes('invalid') ||
+                    data.message.toLowerCase().includes('incorrect') ||
+                    data.message.toLowerCase().includes('not found'))) {
+                    setError('Invalid email or password. Please try again.');
+                } else {
+                    throw new Error(data.message || 'Login failed');
                 }
-                throw new Error(data.message || 'Login failed');
+                setIsLoading(false);
+                return;
             }
 
-            // Success
-            setSuccess('Login successful! Redirecting to dashboard...');
-            
-            // Store token in localStorage
-            if (data.token) {
+            // Success - Store token and user data
+            if (data.token && data.owner) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.owner));
+                
+                setSuccess('Login successful! Redirecting to dashboard...');
+                
+                // Clear form
+                setFormData({ email: '', password: '' });
+
+                // Redirect to dashboard after 2 seconds
+                setTimeout(() => {
+                    navigate('/dashboard');
+                }, 2000);
+            } else {
+                throw new Error('No token received from server');
             }
-
-            // Clear form
-            setFormData({ email: '', password: '' });
-
-            // Redirect to dashboard after 2 seconds
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 2000);
 
         } catch (error) {
             console.error('Login error:', error);
             const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';
             setError(errorMessage);
-            // Show alert for user not found
-            if (errorMessage.includes('not found') || errorMessage.includes('invalid') || errorMessage.includes('incorrect')) {
-                alert('User not found. Please check your credentials.');
-            }
         } finally {
             setIsLoading(false);
         }
@@ -216,7 +223,7 @@ const Auth = () => {
                         </div>
                     )}
 
-                    {/* Login Form - Added wrapper for centering */}
+                    {/* Login Form */}
                     <div className="auth-form-wrapper">
                         <form className="auth-form" onSubmit={handleSubmit}>
                             <div className="form-group">
@@ -230,7 +237,7 @@ const Auth = () => {
                                     placeholder="Enter your email"
                                     required
                                     disabled={isLoading}
-                                    autoComplete="username"
+                                    autoComplete="email"
                                 />
                             </div>
 
@@ -246,6 +253,7 @@ const Auth = () => {
                                     required
                                     disabled={isLoading}
                                     autoComplete="current-password"
+                                    minLength={6}
                                 />
                             </div>
 
@@ -274,4 +282,4 @@ const Auth = () => {
     );
 };
 
-export default Auth;
+export default Login;

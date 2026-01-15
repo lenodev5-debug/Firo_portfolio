@@ -1,4 +1,4 @@
-const Achievement = require('../models/Achievement');
+const Achievement = require('../models/Achivements');
 const path = require('path');
 const fs = require('fs');
 const { deleteFile } = require('../middleware/cleanup');

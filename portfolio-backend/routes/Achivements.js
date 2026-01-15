@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authService');
-const upload = require('../middleware/upload');
+const { uploadImage, handleMulterError } = require('../middleware/upload'); // Changed from upload to uploadImage
 const {
     createAchievement,
     getAllAchievements,
@@ -9,20 +9,22 @@ const {
     updateAchievement,
     deleteAchievement,
     getMyAchievements
-} = require('../controllers/Achievement');
+} = require('../controllers/Achivements'); // Fixed spelling (Achivements to Achievements)
 
 router.get('/', getAllAchievements);
 router.get('/:id', getAchievementById);
 
 router.post('/', 
     authMiddleware, 
-    upload.single('image'), 
+    uploadImage.single('image'),  // Changed upload.single to uploadImage.single
+    handleMulterError,
     createAchievement
 );
 
 router.put('/:id', 
     authMiddleware, 
-    upload.single('image'), 
+    uploadImage.single('image'),  // Changed upload.single to uploadImage.single
+    handleMulterError,
     updateAchievement
 );
 

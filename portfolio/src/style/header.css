@@ -260,6 +260,97 @@ body {
     padding-left: 8px;
 }
 
+/* Header Button Styles */
+.header-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.header-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.login-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.dashboard-btn {
+    background: linear-gradient(135deg, #111111 0%, #f9d638 100%);
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Mobile header buttons */
+.mobile-header-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+    margin: 5px 0;
+    font-size: 1rem;
+}
+
+/* User info in mobile menu */
+.user-info {
+    padding: 15px;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+}
+
+.user-name {
+    color: white;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.user-name i {
+    color: #4facfe;
+}
+
+/* Menu separator */
+.menu-separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 15px 0;
+    list-style: none;
+}
+
+/* Desktop nav adjustments for buttons */
+.desktop-nav ul li button {
+    margin-left: 10px;
+}
+
+.desktop-nav ul li:last-child {
+    margin-left: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .desktop-nav {
+        display: none;
+    }
+    
+    .mobile-nav ul li button {
+        width: 100%;
+    }
+}
 /* ========== RESPONSIVE DESIGN ========== */
 
 /* Mobile - Always show hamburger menu, hide desktop nav */

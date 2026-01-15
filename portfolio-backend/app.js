@@ -22,11 +22,13 @@ app.use('/uploads', express.static('uploads'));
 const ownerRoutes = require('./routes/owner');
 const userRoutes = require('./routes/user'); 
 const userServiceRoutes = require('./routes/UserService');
+const achivements = require('./routes/Achivements')
 
 // ====== Routes ======
 app.use('/api/owners', ownerRoutes);
 app.use('/api/users', userRoutes); 
 app.use('/api/user-services', userServiceRoutes);
+app.use('/api', achivements);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

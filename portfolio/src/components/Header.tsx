@@ -4,6 +4,43 @@ export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState<any>(null);
+
+    // Check login status on mount and when token changes
+    useEffect(() => {
+        const checkLoginStatus = () => {
+            const token = localStorage.getItem('token');
+            const userData = localStorage.getItem('user');
+            
+            setIsLoggedIn(!!token);
+            if (userData) {
+                try {
+                    setUser(JSON.parse(userData));
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                }
+            }
+        };
+
+        // Initial check
+        checkLoginStatus();
+
+        // Listen for storage changes (e.g., login/logout from other tabs)
+        const handleStorageChange = () => {
+            checkLoginStatus();
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Check on every render (simpler approach)
+        const interval = setInterval(checkLoginStatus, 1000);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(interval);
+        };
+    }, []);
 
     // Scroll detection for hide/show header
     useEffect(() => {
@@ -48,6 +85,11 @@ export default function Header() {
         setIsMenuOpen(false);
     };
 
+    const handleDashboardClick = () => {
+        closeMenu();
+        window.location.href = '/dashboard';
+    };
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
@@ -73,10 +115,26 @@ export default function Header() {
                 {/* Desktop Navigation */}
                 <nav className="desktop-nav">
                     <ul>
-                        <li><a href="#home" onClick={closeMenu}>Home</a></li>
-                        <li><a href="#about" onClick={closeMenu}>About</a></li>
-                        <li><a href="#project" onClick={closeMenu}>Project</a></li>
-                        <li><a href="#contact" onClick={closeMenu}>Contact</a></li>
+                        <li><a href="" onClick={closeMenu}>Home</a></li>
+                        <li><a href="about" onClick={closeMenu}>About</a></li>
+                        <li><a href="project" onClick={closeMenu}>Project</a></li>
+                        <li><a href="contact" onClick={closeMenu}>Contact</a></li>
+                        
+                        {/* Dashboard/Login buttons for desktop */}
+                        {isLoggedIn ? (
+                            <>
+                                <li>
+                                    <button 
+                                        className="header-btn dashboard-btn"
+                                        onClick={handleDashboardClick}
+                                    >
+                                        <i className="fas fa-tachometer-alt"></i> Dashboard
+                                    </button>
+                                </li>
+                            </>
+                        ) : (
+                           null
+                        )}
                     </ul>
                 </nav>
                 
@@ -90,16 +148,31 @@ export default function Header() {
                     <span className={`hamburger ${isMenuOpen ? 'open' : ''}`}></span>
                 </button>
                 
-                {/* Mobile Navigation Overlay */}
                 <div className={`mobile-nav-overlay ${isMenuOpen ? 'open' : ''}`} onClick={closeMenu}></div>
                 
-                {/* Mobile Navigation Menu */}
                 <nav className={`mobile-nav ${isMenuOpen ? 'open' : ''}`}>
                     <ul>
                         <li><a href="#home" onClick={closeMenu}>Home</a></li>
                         <li><a href="#about" onClick={closeMenu}>About</a></li>
                         <li><a href="#project" onClick={closeMenu}>Project</a></li>
                         <li><a href="#contact" onClick={closeMenu}>Contact</a></li>
+                        
+                        <li className="menu-separator"></li>
+                        
+                        {isLoggedIn ? (
+                            <>
+                                <li>
+                                    <button 
+                                        className="header-btn mobile-header-btn dashboard-btn"
+                                        onClick={handleDashboardClick}
+                                    >
+                                        <i className="fas fa-tachometer-alt"></i> Dashboard
+                                    </button>
+                                </li>
+                            </>
+                        ) : (
+                           null
+                        )}
                     </ul>
                 </nav>
             </div>
