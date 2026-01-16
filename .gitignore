@@ -1,40 +1,25 @@
-﻿# Dependencies
+﻿# Dependencies - BOTH frontend and backend
 node_modules/
 .npm
 .pnpm
 .yarn/
-package-lock.json
-yarn.lock
 
-# Environment
+# Frontend specific
+portfolio/dist/
+portfolio/build/
+portfolio/.env
+
+# Backend specific  
+portfolio-backend/uploads/
+portfolio-backend/.env
+
+# Common
 .env
 .env.local
 .env.production
-.env.development
-
-# Build outputs
-dist/
-build/
-.next/
-out/
-
-# Vite cache
-.cache/
-
-# OS
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# IDE
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Logs
 *.log
 logs/
-
-# Uploads (backend)
-portfolio-backend/uploads/
