@@ -1,12 +1,90 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function Loading() {
+export default function Loading({ onLoadingComplete }) {
+    const [progress, setProgress] = useState(0);
+    
     useEffect(() => {
         document.body.style.backgroundColor = '#000000';
         document.body.style.backgroundImage = 'none';
         document.body.style.overflow = 'hidden';
         
-        const timer = setTimeout(() => {
+        const startTime = Date.now();
+        
+        // Progress interval
+        const progressInterval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 100) {
+                    clearInterval(progressInterval);
+                    return 100;
+                }
+                return prev + 1;
+            });
+        }, 30);
+        
+        async function fetchData() {
+            try {
+                // Fetch all endpoints
+                const endpoints = [
+                    'http://localhost:4444/api/user-services',
+                    'http://localhost:4444/api/owners',
+                    'http://localhost:4444/api/users',
+                    'http://localhost:4444/api'
+                ];
+                
+                // Fetch all endpoints
+                const [userServicesRes, ownersRes, usersRes, achievementsRes] = await Promise.all([
+                    fetch(endpoints[0]),
+                    fetch(endpoints[1]),
+                    fetch(endpoints[2]),
+                    fetch(endpoints[3])
+                ]);
+                
+                // Parse all responses
+                const [userServices, owners, users, achievements] = await Promise.all([
+                    userServicesRes.json(),
+                    ownersRes.json(),
+                    usersRes.json(),
+                    achievementsRes.json()
+                ]);
+                
+                // Combine all data
+                const allData = {
+                    userServices,
+                    owners,
+                    users,
+                    achievements
+                };
+                
+                // Calculate remaining time
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, 3000 - elapsedTime);
+                
+                // Wait remaining time if needed
+                if (remainingTime > 0) {
+                    await new Promise(resolve => setTimeout(resolve, remainingTime));
+                }
+                
+                if (onLoadingComplete) {
+                    onLoadingComplete(allData);
+                }
+                
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, 3000 - elapsedTime);
+                
+                if (remainingTime > 0) {
+                    await new Promise(resolve => setTimeout(resolve, remainingTime));
+                }
+                
+                if (onLoadingComplete) {
+                    onLoadingComplete(null);
+                }
+            }
+            
+            // Finish loading
+            setProgress(100);
+            
             document.body.style.backgroundColor = '#333333';
             document.body.style.backgroundImage = "url('../assets/bak/hero-bg.jpg')";
             document.body.style.overflow = '';
@@ -20,15 +98,19 @@ export default function Loading() {
                     loadingElement.remove();
                 }, 500);
             }
-        }, 3000); 
-
+            
+            clearInterval(progressInterval);
+        }
+        
+        fetchData();
+        
         return () => {
-            clearTimeout(timer);
+            clearInterval(progressInterval);
             document.body.style.backgroundColor = '';
             document.body.style.backgroundImage = '';
             document.body.style.overflow = '';
         };
-    }, []);
+    }, [onLoadingComplete]);
 
     return (
         <div className="loading-wrapper">
@@ -76,9 +158,15 @@ export default function Loading() {
                         </div>
                     </div>
                 </div>
-                  <div style={{color: "#ffffff", position: "absolute", bottom: "10%", fontSize:"30px", fontFamily: "ICA Rubrik, sans-serif"}}>
-                  loading...  
-                  </div>         
+                <div style={{
+                    color: "#ffffff", 
+                    position: "absolute", 
+                    bottom: "10%", 
+                    fontSize: "30px", 
+                    fontFamily: "ICA Rubrik, sans-serif"
+                }}>
+                    loading... {progress}%
+                </div>
             </div>
         </div>
     );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -6,6 +7,7 @@ export default function Header() {
     const [lastScrollY, setLastScrollY] = useState(0);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const navigate = useNavigate();
 
     // Check login status on mount and when token changes
     useEffect(() => {
@@ -87,7 +89,13 @@ export default function Header() {
 
     const handleDashboardClick = () => {
         closeMenu();
-        window.location.href = '/dashboard';
+        navigate('/dashboard');
+    };
+
+    const handleNavClick = () => {
+        closeMenu();
+        // If you have a single-page app with sections, scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     useEffect(() => {
@@ -110,15 +118,17 @@ export default function Header() {
     return (
         <header className={`header-container ${isHeaderVisible ? 'visible' : 'hidden'}`}>
             <div className="header-content">
-                <h1 className="logo">Leno,Dev</h1>
+                <h1 className="logo">
+                    Leno,Dev
+                </h1>
                 
                 {/* Desktop Navigation */}
                 <nav className="desktop-nav">
                     <ul>
-                        <li><a href="" onClick={closeMenu}>Home</a></li>
-                        <li><a href="about" onClick={closeMenu}>About</a></li>
-                        <li><a href="project" onClick={closeMenu}>Project</a></li>
-                        <li><a href="contact" onClick={closeMenu}>Contact</a></li>
+                        <li><Link to="/" onClick={handleNavClick}>Home</Link></li>
+                        <li><Link to="/about" onClick={closeMenu}>About</Link></li>
+                        <li><Link to="/project" onClick={closeMenu}>Project</Link></li>
+                        <li><Link to="/contact" onClick={closeMenu}>Contact</Link></li>
                         
                         {/* Dashboard/Login buttons for desktop */}
                         {isLoggedIn ? (
@@ -152,10 +162,10 @@ export default function Header() {
                 
                 <nav className={`mobile-nav ${isMenuOpen ? 'open' : ''}`}>
                     <ul>
-                        <li><a href="#home" onClick={closeMenu}>Home</a></li>
-                        <li><a href="#about" onClick={closeMenu}>About</a></li>
-                        <li><a href="#project" onClick={closeMenu}>Project</a></li>
-                        <li><a href="#contact" onClick={closeMenu}>Contact</a></li>
+                        <li><Link to="/" onClick={handleNavClick}>Home</Link></li>
+                        <li><Link to="/about" onClick={closeMenu}>About</Link></li>
+                        <li><Link to="/project" onClick={closeMenu}>Project</Link></li>
+                        <li><Link to="/contact" onClick={closeMenu}>Contact</Link></li>
                         
                         <li className="menu-separator"></li>
                         

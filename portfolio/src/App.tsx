@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Loading from "./components/Loading";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./components/Home";
@@ -15,47 +15,47 @@ import ProtectedRoute from "./service/ProtectedRoute";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [serviceData, setServiceData] = useState(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 4000);
+  const handleLoadingComplete = (data) => {
+    // Update body styles
+    document.body.style.backgroundColor = '#333333';
+    document.body.style.backgroundImage = "url('../assets/bak/hero-bg.jpg')";
+    document.body.style.overflow = '';
+    
+    // Set data and mark loading as complete
+    setServiceData(data);
+    setIsLoading(false);
+  };
 
-    return () => clearTimeout(timer);
-  }, []);
+  if (isLoading) {
+    return <Loading onLoadingComplete={handleLoadingComplete} />;
+  }
 
   return (
     <Router>
-      {isLoading ? (
-        <div style={{ backgroundColor: "#333"}}>
-          <Loading />
-        </div>
-      ) : (
-        <Routes>
-          <Route path='/' element={
-            <>
-              <Header />
-              <Home />
-              <CardDisplay />
-              <About />
-              <Service/>
-              <ProjectDisplay />
-              <Awards />
-              <Contact />
-            </>
-          } />
-          
-          {/* Auth Routes */}
-          <Route path="/auth/user/login" element={<Auth />} />
-
-          {/* Protected Dashboard Route */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      )}
+      <Routes>
+        <Route path='/' element={
+          <>
+            <Header />
+            <Home />
+            <CardDisplay />
+            <About />
+            <Service serviceData={serviceData} />
+            <ProjectDisplay />
+            <Awards />
+            <Contact />
+          </>
+        } />
+        
+        <Route path="/auth/user/login" element={<Auth />} />
+        
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+      </Routes>
     </Router>
   );
 }
