@@ -262,8 +262,8 @@ const Contact = () => {
                                 </div>
                                 <h3 className="card-title">Email Me</h3>
                                 <p className="card-content">For project inquiries, collaboration, or just to say hello</p>
-                                <a href="mailto:firomsa.misagana@example.com" className="card-link">
-                                    firomsa.misagana@example.com
+                                <a href="mailto:firomsa.misagana3@email.com" className="card-link">
+                                    firomsa.misagana3@email.com
                                     <i className="fas fa-arrow-right"></i>
                                 </a>
                             </div>
@@ -275,7 +275,7 @@ const Contact = () => {
                                 <h3 className="card-title">Call Me</h3>
                                 <p className="card-content">Available for calls Monday to Friday, 9 AM - 6 PM EST</p>
                                 <a href="tel:+251912345678" className="card-link">
-                                    +251 912 345 678
+                                    +251 951 444 444 92
                                     <i className="fas fa-arrow-right"></i>
                                 </a>
                             </div>
@@ -285,7 +285,7 @@ const Contact = () => {
                                     <i className="fas fa-map-marker-alt"></i>
                                 </div>
                                 <h3 className="card-title">Location</h3>
-                                <p className="card-content">Based in Addis Ababa, Ethiopia<br />Working with clients worldwide</p>
+                                <p className="card-content">Based in Jijiga, Ethiopia<br />Working with clients worldwide</p>
                                 <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="card-link">
                                     View on Map
                                     <i className="fas fa-arrow-right"></i>

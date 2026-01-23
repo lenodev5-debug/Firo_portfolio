@@ -1,5 +1,7 @@
 import { useState } from 'react';
-
+import IG from '../assets/icon/socialmedia/instagram (1).png'
+import FB from '../assets/icon/socialmedia/facebook.png'
+import LD from '../assets/icon/socialmedia/linkedin (1).png'
 export default function About() {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -20,13 +22,13 @@ export default function About() {
                 <p className="tagline" style={{textAlign: "center", color:"#ffffff"}}>Full-stack Developer & UI/UX Enthusiast</p>
                 <div className="contact-icons">
                     <a href="#" className="social-link">
-                        <img src="../src/assets/icon/socialmedia/instagram (1).png" alt="Instagram" />
+                        <img src={IG} alt="Instagram" />
                     </a>
                     <a href="#" className="social-link">
-                        <img src="../src/assets/icon/socialmedia/facebook.png" alt="Facebook" />
+                        <img src={FB} alt="Facebook" />
                     </a>
                     <a href="#" className="social-link">
-                        <img src="../src/assets/icon/socialmedia/linkedin (1).png" alt="LinkedIn" />
+                        <img src={LD} alt="LinkedIn" />
                     </a>
                 </div>
             </div>
