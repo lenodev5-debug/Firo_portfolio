@@ -1,19 +1,23 @@
+import Am from '../src/assets/achivements/icon/americanspaces-300x200-1.jpeg'
+import DINT from '../src/assets/achivements/icon/dint.jpg'
+import DIREAD from '../src/assets/achivements/icon/dire dawa adminstration.jpg'
+import Ministry from "../src/assets/achivements/icon/Ministry_of_Education_(Ethiopia).png"
 export default function Awards() {
     const awards = [
         {
-            src: "../src/assets/achivements/icon/americanspaces-300x200-1.jpeg",
+            src: {Am},
             alt: "American Spaces Award"
         },
         {
-            src: "../src/assets/achivements/icon/dint.jpg",
+            src: {DINT},
             alt: "Dint Award"
         },
         {
-            src: "../src/assets/achivements/icon/dire dawa adminstration.jpg",
+            src: {DIREAD},
             alt: "Dire Dawa Administration Award"
         },
         {
-            src: "../src/assets/achivements/icon/Ministry_of_Education_(Ethiopia).png",
+            src: Ministry,
             alt: "Ministry of Education Ethiopia Award"
         }
     ];
