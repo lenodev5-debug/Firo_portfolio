@@ -1,19 +1,20 @@
-import Am from '../src/assets/achivements/icon/americanspaces-300x200-1.jpeg'
-import DINT from '../src/assets/achivements/icon/dint.jpg'
-import DIREAD from '../src/assets/achivements/icon/dire dawa adminstration.jpg'
-import Ministry from "../src/assets/achivements/icon/Ministry_of_Education_(Ethiopia).png"
+import { useEffect, useState } from 'react';
+import Am from '../assets/achivements/icon/americanspaces-300x200-1.jpeg'
+import DINT from '../assets/achivements/icon/dint.jpg'
+import DIREAD from '../assets/achivements/icon/dire dawa adminstration.jpg'
+import Ministry from "../assets/achivements/icon/Ministry_of_Education_(Ethiopia).png"
 export default function Awards() {
     const awards = [
         {
-            src: {Am},
+            src: Am,
             alt: "American Spaces Award"
         },
         {
-            src: {DINT},
+            src: DINT,
             alt: "Dint Award"
         },
         {
-            src: {DIREAD},
+            src: DIREAD,
             alt: "Dire Dawa Administration Award"
         },
         {
@@ -21,7 +22,29 @@ export default function Awards() {
             alt: "Ministry of Education Ethiopia Award"
         }
     ];
+    
+    const [AwardData, setAwardData] = useState('');
+    useEffect(() => {
+        const fetchAward = async() => {
 
+            try {
+                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+                const response = await fetch(`${API_BASE_URL}`);
+                
+                if(!response.ok){
+                    throw new Error('Failed to get the Award')
+                }
+                
+                const result = await response.json();
+                setAwardData(result);
+            } catch (error) {
+                console.error('Failed to fetch Award', error);
+            }
+        }
+
+        fetchAward();
+        },[])
+        
     return (
         <section className="awards-container" id="awards">
             <h1>Awards <span>&</span></h1>

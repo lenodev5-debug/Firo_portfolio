@@ -292,20 +292,6 @@ const Contact = () => {
                                 </a>
                             </div>
 
-                            <div className="info-card">
-                                <div className="card-icon">
-                                    <i className="fas fa-calendar-alt"></i>
-                                </div>
-                                <h3 className="card-title">Schedule a Call</h3>
-                                <p className="card-content">Book a 30-minute discovery call to discuss your project</p>
-                                <a href="#" className="card-link" onClick={(e) => {
-                                    e.preventDefault();
-                                    alert('Schedule call feature coming soon!');
-                                }}>
-                                    Book Now
-                                    <i className="fas fa-arrow-right"></i>
-                                </a>
-                            </div>
                         </div>
 
                         {/* Availability Status */}
@@ -344,7 +330,7 @@ const Contact = () => {
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label className="form-label">
-                                            Your Name <span className="required">*</span>
+                                            Your Name 
                                         </label>
                                         <input
                                             type="text"
@@ -360,7 +346,7 @@ const Contact = () => {
                                     
                                     <div className="form-group">
                                         <label className="form-label">
-                                            Email Address <span className="required">*</span>
+                                            Email Address 
                                         </label>
                                         <input
                                             type="email"
@@ -391,7 +377,7 @@ const Contact = () => {
                                     
                                     <div className="form-group">
                                         <label className="form-label">
-                                            Project Type <span className="required">*</span>
+                                            Project Type 
                                         </label>
                                         <div className="project-types">
                                             <div className="type-option">
@@ -446,7 +432,7 @@ const Contact = () => {
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label className="form-label">
-                                            Budget Range <span className="required">*</span>
+                                            Budget Range 
                                         </label>
                                         <select
                                             name="budget"
@@ -466,7 +452,7 @@ const Contact = () => {
                                     
                                     <div className="form-group">
                                         <label className="form-label">
-                                            Timeline <span className="required">*</span>
+                                            Timeline 
                                         </label>
                                         <select
                                             name="timeline"
@@ -487,7 +473,7 @@ const Contact = () => {
 
                                 <div className="form-group">
                                     <label className="form-label">
-                                        Project Details <span className="required">*</span>
+                                        Project Details 
                                     </label>
                                     <textarea
                                         name="message"
