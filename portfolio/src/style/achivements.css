@@ -57,12 +57,14 @@
 .awards-container img {
     width: 180px;
     height: 180px;
-    object-fit: cover; 
+    object-fit: cover; /* This ensures images fill the circle while keeping aspect ratio */
+    object-position: center; /* Centers the image */
     border: 3px solid rgba(255, 255, 255, 0.8);
     border-radius: 50%;
     transition: all 0.3s ease;
     filter: grayscale(20%);
     cursor: pointer;
+    background-color: #f0f0f0; /* Fallback background if image fails to load */
 }
 
 .awards-container img:hover {

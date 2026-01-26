@@ -1,19 +1,36 @@
 const UserService = require('../models/UserService');
+const { deleteFile } = require('../middleware/cleanup');
+
 exports.createUserService = async (req, res) => {
     try {
-        const serviceData = { 
-            ...req.body, 
-            userId: req.user.id
-        };
+        const { name, serviceType, description, price } = req.body;
         
-        // Handle image upload
-        if (req.file) {
-            serviceData.image = req.file.path;
-        } else {
+        if (!name || !serviceType || !description || !price) {
+            if (req.file) await deleteFile(req.file.path);
             return res.status(400).json({
                 success: false,
-                message: 'Service image is required'
+                message: 'Please provide all required fields: name, serviceType, description, price'
             });
+        }
+
+        const serviceData = { 
+            name,
+            serviceType,
+            description,
+            price: parseFloat(price),
+            userId: req.user.id  
+        };
+        
+        if (req.body.technologies) {
+            serviceData.technologies = Array.isArray(req.body.technologies) 
+                ? req.body.technologies 
+                : req.body.technologies.split(',').map(tech => tech.trim());
+        }
+        
+        if (req.file) {
+            serviceData.image = `/uploads/${req.file.filename}`;
+        } else {
+            serviceData.image = '/uploads/default-service.png';
         }
         
         const newService = new UserService(serviceData);
@@ -27,10 +44,26 @@ exports.createUserService = async (req, res) => {
     } catch (error) {
         if (req.file) await deleteFile(req.file.path);
         
-        console.error(error);
+        console.error('Create service error:', error);
+        
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(val => val.message);
+            return res.status(400).json({
+                success: false,
+                message: messages.join(', ')
+            });
+        }
+        
+        if (error.code === 11000) {
+            return res.status(400).json({
+                success: false,
+                message: 'Service with this name already exists'
+            });
+        }
+        
         res.status(500).json({ 
             success: false,
-            message: 'Server Error' 
+            message: 'Server error creating service'
         });
     }
 };
@@ -38,6 +71,7 @@ exports.createUserService = async (req, res) => {
 exports.updateUserService = async (req, res) => {
     try {
         const { id } = req.params;
+        
         const findService = await UserService.findById(id);
         
         if (!findService) {
@@ -56,19 +90,33 @@ exports.updateUserService = async (req, res) => {
             });
         }
 
-        const updateData = { ...req.body };
+        const updateData = {};
+        
+        if (req.body.name) updateData.name = req.body.name;
+        if (req.body.serviceType) updateData.serviceType = req.body.serviceType;
+        if (req.body.description) updateData.description = req.body.description;
+        if (req.body.price) updateData.price = parseFloat(req.body.price);
+        
+        if (req.body.technologies) {
+            updateData.technologies = Array.isArray(req.body.technologies) 
+                ? req.body.technologies 
+                : req.body.technologies.split(',').map(tech => tech.trim());
+        }
         
         if (req.file) {
-            if (findService.image) {
+            if (findService.image && findService.image !== '/uploads/default-service.png') {
                 await deleteFile(findService.image);
             }
-            updateData.image = req.file.path;
+            updateData.image = `/uploads/${req.file.filename}`;
         }
 
         const updatedService = await UserService.findByIdAndUpdate(
             id, 
             updateData, 
-            { new: true }
+            { 
+                new: true, 
+                runValidators: true 
+            }
         );
         
         res.status(200).json({
@@ -79,12 +127,62 @@ exports.updateUserService = async (req, res) => {
 
     } catch (error) {
         if (req.file) await deleteFile(req.file.path);
-        console.error(error);
+        
+        console.error('Update service error:', error);
+        
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(val => val.message);
+            return res.status(400).json({
+                success: false,
+                message: messages.join(', ')
+            });
+        }
+        
         res.status(500).json({ 
             success: false,
-            message: 'Server Error' 
+            message: 'Server error updating service'
         });
     }           
+};
+
+exports.deleteUserService = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const findService = await UserService.findById(id);
+
+        if (!findService) {
+            return res.status(404).json({
+                success: false,
+                message: "Service not found"
+            });
+        }
+
+        if (findService.userId.toString() !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to delete this service"
+            });
+        }
+
+        if (findService.image && findService.image !== '/uploads/default-service.png') {
+            await deleteFile(findService.image);
+        }
+
+        await UserService.findByIdAndDelete(id);
+        
+        res.status(200).json({ 
+            success: true,
+            message: "Service deleted successfully",
+            data: { id }
+        });
+    } catch(error) {
+        console.error('Delete service error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error deleting service'
+        });
+    }   
 };
 
 exports.getUserServices = async (req, res) => {
@@ -131,41 +229,6 @@ exports.getUserServiceById = async (req, res) => {
     }
 };
 
-exports.deleteUserService = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const findService = await UserService.findById(id);
-
-        if (!findService) {
-            return res.status(404).json({
-                success: false,
-                message: "Service not found"
-            });
-        }
-
-        if (findService.userId.toString() !== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: "You are not authorized to delete this service"
-            });
-        }
-
-        const deleteService = await UserService.findByIdAndDelete(id);
-        
-        res.status(200).json({ 
-            success: true,
-            message: "Service deleted successfully",
-            data: deleteService
-        });
-    } catch(error) {
-        console.error(error);
-        res.status(500).json({ 
-            success: false,
-            message: 'Server Error' 
-        });
-    }   
-}
-
 exports.getMyServices = async (req, res) => {
     try {
         const services = await UserService.find({ userId: req.user.id });
@@ -183,3 +246,15 @@ exports.getMyServices = async (req, res) => {
         });
     }
 };
+
+exports.countProject = async (req, res) => {
+    try {
+       const counts =  await UserService.aggregate([
+        {$group: {_id: $service.aggregate, count: {$sum:1}}}
+       ]);
+
+       res.json({ success: true, data: counts});
+    } catch (error) {
+        res.status(500).json({success: false, message: "Server Error"})
+    }
+}

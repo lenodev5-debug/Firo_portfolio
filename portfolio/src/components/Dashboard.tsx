@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from './Header';
 import Profile from '../assets/bak/lenodevprofile.jpg';
-// ✅ Correct image imports
 import WebIcon from '../assets/icon/web-design (1).png';
 import CubeIcon from '../assets/icon/cube.png';
 import MobileIcon from '../assets/icon/mobile.png';
@@ -14,13 +13,6 @@ interface UserProfile {
     email: string;
     role: string;
     createdAt: string;
-}
-
-interface DashboardStats {
-    achievementsCount: number;
-    servicesCount: number;
-    messagesCount: number;
-    totalVisitors: number;
 }
 
 interface Notification {
@@ -73,23 +65,18 @@ const Dashboard = () => {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
     
-    // State for data
     const [messages, setMessages] = useState<Message[]>([]);
     const [achievements, setAchievements] = useState<Achievement[]>([]);
     const [services, setServices] = useState<Service[]>([]);
     
-    // UI State
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [activeMessage, setActiveMessage] = useState<Message | null>(null);
-    const [showNotifications, setShowNotifications] = useState(false);
-    const [showMessages, setShowMessages] = useState(false);
     const [newNotification, setNewNotification] = useState<Notification | null>(null);
     const [selectedOption, setSelectedOption] = useState<string>('Project');
     
     // Service CRUD State
-    const [isCreating, setIsCreating] = useState(false);
-    const [isEditing, setIsEditing] = useState<string | null>(null); // Service ID being edited
-    const [formData, setFormData] = useState({
+    const [isCreatingService, setIsCreatingService] = useState(false);
+    const [isEditingService, setIsEditingService] = useState<string | null>(null);
+    const [serviceFormData, setServiceFormData] = useState({
         name: '',
         serviceType: 'web' as 'web' | 'mobile' | 'design',
         description: '',
@@ -98,21 +85,33 @@ const Dashboard = () => {
         image: null as File | null
     });
     
-    // Dynamic counts for cards
+    // Achievement CRUD State
+    const [isCreatingAchievement, setIsCreatingAchievement] = useState(false);
+    const [isEditingAchievement, setIsEditingAchievement] = useState<string | null>(null);
+    const [achievementFormData, setAchievementFormData] = useState({
+        title: '',
+        description: '',
+        date: '',
+        image: null as File | null
+    });
+    
     const [serviceCounts, setServiceCounts] = useState({ 
         web: 0, 
         design: 0, 
         mobile: 0 
     });
 
-    // ✅ Create axios instance with environment variable
-    const createApi = () => {
+    const getAuthToken = () => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/auth/user/login');
-            throw new Error('No token found');
+            throw new Error('No authentication token found');
         }
-        
+        return token;
+    };
+
+    const createApi = () => {
+        const token = getAuthToken();
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
         
         return axios.create({
@@ -125,7 +124,41 @@ const Dashboard = () => {
         });
     };
 
-    // ✅ Fetch dashboard data including service counts
+    const createFormDataApi = () => {
+        const token = getAuthToken();
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+        
+        return axios.create({
+            baseURL: `${API_BASE_URL}/api`,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            timeout: 10000
+        });
+    };
+
+    // Helper function to get achievement image URL
+    const getAchievementImageUrl = (imagePath?: string): string => {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+        
+        if (!imagePath) {
+            return `${baseUrl}/uploads/default-achievement.png`;
+        }
+        
+        // If already full URL
+        if (imagePath.startsWith('http')) {
+            return imagePath;
+        }
+        
+        // If starts with /uploads/
+        if (imagePath.startsWith('/uploads/')) {
+            return `${baseUrl}${imagePath}`;
+        }
+        
+        // If it's just a filename, assume it's in uploads/general/
+        return `${baseUrl}/uploads/general/${imagePath}`;
+    };
+
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
@@ -140,7 +173,6 @@ const Dashboard = () => {
                 const api = createApi();
                 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
 
-                // Fetch user profile
                 try {
                     const profileResponse = await api.get('/owners/profile');
                     if (profileResponse.data.success) {
@@ -150,7 +182,6 @@ const Dashboard = () => {
                     console.log('Profile fetch error:', profileErr.message);
                 }
 
-                // Fetch service counts by type
                 try {
                     const countsRes = await axios.get(`${API_BASE_URL}/api/user-services/stats/count-by-type`);
                     if (countsRes.data.success) {
@@ -161,16 +192,14 @@ const Dashboard = () => {
                         setServiceCounts(countObj);
                     }
                 } catch (countsErr) {
-                    console.log('Counts fetch error, will calculate from services list');
+                    console.log('Counts fetch error:', countsErr);
                 }
 
-                // Fetch all services
                 try {
                     const servicesRes = await api.get('/user-services');
                     if (servicesRes.data.success) {
                         setServices(servicesRes.data.data);
                         
-                        // If counts endpoint failed, calculate manually
                         if (Object.values(serviceCounts).every(count => count === 0)) {
                             const servicesData = servicesRes.data.data;
                             const calculatedCounts = {
@@ -185,17 +214,19 @@ const Dashboard = () => {
                     console.log('Services fetch error:', serviceErr.message);
                 }
 
-                // Fetch achievements
                 try {
                     const achievementsRes = await api.get('/achievements');
                     if (achievementsRes.data.success) {
+                        console.log('Achievements loaded:', achievementsRes.data.data);
+                        if (achievementsRes.data.data.length > 0) {
+                            console.log('First achievement image path:', achievementsRes.data.data[0].image);
+                        }
                         setAchievements(achievementsRes.data.data);
                     }
                 } catch (achievementErr) {
                     console.log('Achievements fetch error:', achievementErr.message);
                 }
 
-                // Fetch messages
                 try {
                     const messagesRes = await axios.get(`${API_BASE_URL}/api/contact/messages`);
                     if (messagesRes.data.success) {
@@ -228,28 +259,26 @@ const Dashboard = () => {
         fetchDashboardData();
     }, [navigate]);
 
-    // ✅ Handle form input changes
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    // ========== SERVICE CRUD FUNCTIONS ==========
+    const handleServiceInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+        setServiceFormData(prev => ({
             ...prev,
             [name]: value
         }));
     };
 
-    // ✅ Handle file input for image upload
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleServiceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setFormData(prev => ({
+            setServiceFormData(prev => ({
                 ...prev,
                 image: e.target.files![0]
             }));
         }
     };
 
-    // ✅ Reset form to default values
-    const resetForm = () => {
-        setFormData({
+    const resetServiceForm = () => {
+        setServiceFormData({
             name: '',
             serviceType: 'web',
             description: '',
@@ -257,15 +286,14 @@ const Dashboard = () => {
             technologies: '',
             image: null
         });
-        setIsCreating(false);
-        setIsEditing(null);
+        setIsCreatingService(false);
+        setIsEditingService(null);
     };
 
-    // ✅ Set form data for editing a service
-    const handleEditClick = (service: Service) => {
-        setIsEditing(service._id);
-        setIsCreating(true);
-        setFormData({
+    const handleServiceEditClick = (service: Service) => {
+        setIsEditingService(service._id);
+        setIsCreatingService(true);
+        setServiceFormData({
             name: service.name,
             serviceType: service.serviceType,
             description: service.description,
@@ -275,60 +303,46 @@ const Dashboard = () => {
         });
     };
 
-    // ✅ Handle service creation/update
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleServiceSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         try {
-            const api = createApi();
-            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+            const api = createFormDataApi();
             
-            // Prepare form data (including file)
             const formDataToSend = new FormData();
-            formDataToSend.append('name', formData.name);
-            formDataToSend.append('serviceType', formData.serviceType);
-            formDataToSend.append('description', formData.description);
-            formDataToSend.append('price', formData.price);
-            if (formData.technologies) {
-                formDataToSend.append('technologies', formData.technologies);
+            formDataToSend.append('name', serviceFormData.name);
+            formDataToSend.append('serviceType', serviceFormData.serviceType);
+            formDataToSend.append('description', serviceFormData.description);
+            formDataToSend.append('price', serviceFormData.price);
+            
+            if (serviceFormData.technologies) {
+                formDataToSend.append('technologies', serviceFormData.technologies);
             }
-            if (formData.image) {
-                formDataToSend.append('image', formData.image);
+            
+            if (serviceFormData.image) {
+                formDataToSend.append('image', serviceFormData.image);
             }
 
             let response;
             
-            if (isEditing) {
-                // Update existing service
-                response = await api.put(`/user-services/${isEditing}`, formDataToSend, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
+            if (isEditingService) {
+                response = await api.put(`/user-services/${isEditingService}`, formDataToSend);
             } else {
-                // Create new service
-                response = await api.post('/user-services', formDataToSend, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
+                response = await api.post('/user-services', formDataToSend);
             }
             
             if (response.data.success) {
-                // Update local services state
-                if (isEditing) {
+                if (isEditingService) {
                     setServices(prev => prev.map(service => 
-                        service._id === isEditing ? response.data.data : service
+                        service._id === isEditingService ? response.data.data : service
                     ));
                 } else {
                     setServices(prev => [response.data.data, ...prev]);
                 }
                 
-                // Update counts
                 const updatedCounts = { ...serviceCounts };
-                if (isEditing) {
-                    // If editing, we need to check if service type changed
-                    const oldService = services.find(s => s._id === isEditing);
+                if (isEditingService) {
+                    const oldService = services.find(s => s._id === isEditingService);
                     const newService = response.data.data;
                     
                     if (oldService && oldService.serviceType !== newService.serviceType) {
@@ -336,17 +350,15 @@ const Dashboard = () => {
                         updatedCounts[newService.serviceType] = (updatedCounts[newService.serviceType] || 0) + 1;
                     }
                 } else {
-                    // For new service, increment the count
                     updatedCounts[response.data.data.serviceType] = (updatedCounts[response.data.data.serviceType] || 0) + 1;
                 }
                 setServiceCounts(updatedCounts);
                 
-                // Show success notification
                 const newNotif: Notification = {
                     id: Date.now().toString(),
                     type: 'success',
-                    title: `Service ${isEditing ? 'Updated' : 'Created'}`,
-                    message: `Service "${response.data.data.name}" ${isEditing ? 'updated' : 'created'} successfully`,
+                    title: `Service ${isEditingService ? 'Updated' : 'Created'}`,
+                    message: `Service "${response.data.data.name}" ${isEditingService ? 'updated' : 'created'} successfully`,
                     timestamp: new Date().toLocaleTimeString(),
                     read: false
                 };
@@ -354,8 +366,7 @@ const Dashboard = () => {
                 setNewNotification(newNotif);
                 setNotifications(prev => [newNotif, ...prev]);
                 
-                // Reset form
-                resetForm();
+                resetServiceForm();
                 
                 setTimeout(() => {
                     setNewNotification(null);
@@ -368,7 +379,7 @@ const Dashboard = () => {
             const errorNotif: Notification = {
                 id: Date.now().toString(),
                 type: 'error',
-                title: isEditing ? 'Update Failed' : 'Creation Failed',
+                title: isEditingService ? 'Update Failed' : 'Creation Failed',
                 message: error.response?.data?.message || 'Failed to save service. Please try again.',
                 timestamp: new Date().toLocaleTimeString(),
                 read: false
@@ -383,8 +394,7 @@ const Dashboard = () => {
         }
     };
 
-    // ✅ Handle service deletion
-    const handleDelete = async (id: string, name: string) => {
+    const handleServiceDelete = async (id: string, name: string) => {
         if (!window.confirm(`Are you sure you want to delete "${name}"?`)) {
             return;
         }
@@ -396,17 +406,14 @@ const Dashboard = () => {
             const response = await api.delete(`/user-services/${id}`);
             
             if (response.data.success) {
-                // Remove from state
                 setServices(prev => prev.filter(service => service._id !== id));
                 
-                // Update counts
                 if (serviceToDelete) {
                     const updatedCounts = { ...serviceCounts };
                     updatedCounts[serviceToDelete.serviceType] = Math.max(0, updatedCounts[serviceToDelete.serviceType] - 1);
                     setServiceCounts(updatedCounts);
                 }
                 
-                // Show success notification
                 const newNotif: Notification = {
                     id: Date.now().toString(),
                     type: 'success',
@@ -445,15 +452,181 @@ const Dashboard = () => {
         }
     };
 
-    // ✅ Service creation/editing form
+    // ========== ACHIEVEMENT CRUD FUNCTIONS ==========
+    const handleAchievementInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setAchievementFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleAchievementFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setAchievementFormData(prev => ({
+                ...prev,
+                image: e.target.files![0]
+            }));
+        }
+    };
+
+    const resetAchievementForm = () => {
+        setAchievementFormData({
+            title: '',
+            description: '',
+            date: new Date().toISOString().split('T')[0],
+            image: null
+        });
+        setIsCreatingAchievement(false);
+        setIsEditingAchievement(null);
+    };
+
+    const handleAchievementEditClick = (achievement: Achievement) => {
+        setIsEditingAchievement(achievement._id);
+        setIsCreatingAchievement(true);
+        setAchievementFormData({
+            title: achievement.title,
+            description: achievement.description,
+            date: achievement.date ? new Date(achievement.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            image: null
+        });
+    };
+
+    const handleAchievementSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        try {
+            const api = createFormDataApi();
+            
+            const formDataToSend = new FormData();
+            formDataToSend.append('title', achievementFormData.title);
+            formDataToSend.append('description', achievementFormData.description);
+            
+            // Always send date, use current date if empty
+            const dateToSend = achievementFormData.date || new Date().toISOString().split('T')[0];
+            formDataToSend.append('date', dateToSend);
+            
+            if (achievementFormData.image) {
+                formDataToSend.append('image', achievementFormData.image);
+            }
+
+            let response;
+            
+            if (isEditingAchievement) {
+                response = await api.put(`/achievements/${isEditingAchievement}`, formDataToSend);
+            } else {
+                response = await api.post('/achievements', formDataToSend);
+            }
+            
+            if (response.data.success) {
+                if (isEditingAchievement) {
+                    setAchievements(prev => prev.map(achievement => 
+                        achievement._id === isEditingAchievement ? response.data.data : achievement
+                    ));
+                } else {
+                    setAchievements(prev => [response.data.data, ...prev]);
+                }
+                
+                const newNotif: Notification = {
+                    id: Date.now().toString(),
+                    type: 'success',
+                    title: `Achievement ${isEditingAchievement ? 'Updated' : 'Created'}`,
+                    message: `Achievement "${response.data.data.title}" ${isEditingAchievement ? 'updated' : 'created'} successfully`,
+                    timestamp: new Date().toLocaleTimeString(),
+                    read: false
+                };
+                
+                setNewNotification(newNotif);
+                setNotifications(prev => [newNotif, ...prev]);
+                
+                resetAchievementForm();
+                
+                setTimeout(() => {
+                    setNewNotification(null);
+                }, 5000);
+            }
+            
+        } catch (error: any) {
+            console.error('Error saving achievement:', error);
+            
+            const errorNotif: Notification = {
+                id: Date.now().toString(),
+                type: 'error',
+                title: isEditingAchievement ? 'Update Failed' : 'Creation Failed',
+                message: error.response?.data?.message || 'Failed to save achievement. Please try again.',
+                timestamp: new Date().toLocaleTimeString(),
+                read: false
+            };
+            
+            setNewNotification(errorNotif);
+            setNotifications(prev => [errorNotif, ...prev]);
+            
+            setTimeout(() => {
+                setNewNotification(null);
+            }, 5000);
+        }
+    };
+
+    const handleAchievementDelete = async (id: string, title: string) => {
+        if (!window.confirm(`Are you sure you want to delete "${title}"?`)) {
+            return;
+        }
+        
+        try {
+            const api = createApi();
+            
+            const response = await api.delete(`/achievements/${id}`);
+            
+            if (response.data.success) {
+                setAchievements(prev => prev.filter(achievement => achievement._id !== id));
+                
+                const newNotif: Notification = {
+                    id: Date.now().toString(),
+                    type: 'success',
+                    title: 'Achievement Deleted',
+                    message: `Achievement "${title}" deleted successfully`,
+                    timestamp: new Date().toLocaleTimeString(),
+                    read: false
+                };
+                
+                setNewNotification(newNotif);
+                setNotifications(prev => [newNotif, ...prev]);
+                
+                setTimeout(() => {
+                    setNewNotification(null);
+                }, 5000);
+            }
+            
+        } catch (error: any) {
+            console.error('Error deleting achievement:', error);
+            
+            const errorNotif: Notification = {
+                id: Date.now().toString(),
+                type: 'error',
+                title: 'Deletion Failed',
+                message: error.response?.data?.message || 'Failed to delete achievement',
+                timestamp: new Date().toLocaleTimeString(),
+                read: false
+            };
+            
+            setNewNotification(errorNotif);
+            setNotifications(prev => [errorNotif, ...prev]);
+            
+            setTimeout(() => {
+                setNewNotification(null);
+            }, 5000);
+        }
+    };
+
+    // ========== RENDER FUNCTIONS ==========
     const renderServiceForm = () => (
-        <form onSubmit={handleSubmit} className="service-form">
+        <form onSubmit={handleServiceSubmit} className="service-form">
             <div className="form-header">
-                <h4>{isEditing ? 'Edit Service' : 'Create New Service'}</h4>
+                <h4>{isEditingService ? 'Edit Service' : 'Create New Service'}</h4>
                 <button 
                     type="button" 
                     className="btn-cancel"
-                    onClick={resetForm}
+                    onClick={resetServiceForm}
                 >
                     Cancel
                 </button>
@@ -466,8 +639,8 @@ const Dashboard = () => {
                     name="name"
                     placeholder="e.g., E-commerce Website"
                     className="form-input"
-                    value={formData.name}
-                    onChange={handleInputChange}
+                    value={serviceFormData.name}
+                    onChange={handleServiceInputChange}
                     required
                 />
             </div>
@@ -477,8 +650,8 @@ const Dashboard = () => {
                 <select 
                     name="serviceType"
                     className="form-select"
-                    value={formData.serviceType}
-                    onChange={handleInputChange}
+                    value={serviceFormData.serviceType}
+                    onChange={handleServiceInputChange}
                     required
                 >
                     <option value="web">Web Development</option>
@@ -494,8 +667,8 @@ const Dashboard = () => {
                     placeholder="Describe your service..."
                     className="form-textarea"
                     rows={4}
-                    value={formData.description}
-                    onChange={handleInputChange}
+                    value={serviceFormData.description}
+                    onChange={handleServiceInputChange}
                     required
                 ></textarea>
             </div>
@@ -508,8 +681,8 @@ const Dashboard = () => {
                         name="price"
                         placeholder="0.00"
                         className="form-input"
-                        value={formData.price}
-                        onChange={handleInputChange}
+                        value={serviceFormData.price}
+                        onChange={handleServiceInputChange}
                         required
                         min="0"
                         step="0.01"
@@ -522,7 +695,7 @@ const Dashboard = () => {
                         type="file"
                         accept="image/*"
                         className="form-file"
-                        onChange={handleFileChange}
+                        onChange={handleServiceFileChange}
                     />
                     <small>Leave empty to keep current image</small>
                 </div>
@@ -535,21 +708,91 @@ const Dashboard = () => {
                     name="technologies"
                     placeholder="React, Node.js, MongoDB (comma separated)"
                     className="form-input"
-                    value={formData.technologies}
-                    onChange={handleInputChange}
+                    value={serviceFormData.technologies}
+                    onChange={handleServiceInputChange}
                 />
                 <small>Separate technologies with commas</small>
             </div>
             
             <div className="form-actions">
                 <button type="submit" className="btn-primary">
-                    {isEditing ? 'Update Service' : 'Create Service'}
+                    {isEditingService ? 'Update Service' : 'Create Service'}
                 </button>
             </div>
         </form>
     );
 
-    // ✅ Render service cards
+    const renderAchievementForm = () => (
+        <form onSubmit={handleAchievementSubmit} className="service-form">
+            <div className="form-header">
+                <h4>{isEditingAchievement ? 'Edit Achievement' : 'Create New Achievement'}</h4>
+                <button 
+                    type="button" 
+                    className="btn-cancel"
+                    onClick={resetAchievementForm}
+                >
+                    Cancel
+                </button>
+            </div>
+            
+            <div className="form-group">
+                <label>Title *</label>
+                <input 
+                    type="text" 
+                    name="title"
+                    placeholder="e.g., Best Developer Award 2024"
+                    className="form-input"
+                    value={achievementFormData.title}
+                    onChange={handleAchievementInputChange}
+                    required
+                />
+            </div>
+            
+            <div className="form-group">
+                <label>Description *</label>
+                <textarea 
+                    name="description"
+                    placeholder="Describe your achievement..."
+                    className="form-textarea"
+                    rows={4}
+                    value={achievementFormData.description}
+                    onChange={handleAchievementInputChange}
+                    required
+                ></textarea>
+            </div>
+            
+            <div className="form-row">
+                <div className="form-group">
+                    <label>Date</label>
+                    <input 
+                        type="date" 
+                        name="date"
+                        className="form-input"
+                        value={achievementFormData.date}
+                        onChange={handleAchievementInputChange}
+                    />
+                </div>
+                
+                <div className="form-group">
+                    <label>Image</label>
+                    <input 
+                        type="file"
+                        accept="image/*"
+                        className="form-file"
+                        onChange={handleAchievementFileChange}
+                    />
+                    <small>Upload achievement image/certificate</small>
+                </div>
+            </div>
+            
+            <div className="form-actions">
+                <button type="submit" className="btn-primary">
+                    {isEditingAchievement ? 'Update Achievement' : 'Create Achievement'}
+                </button>
+            </div>
+        </form>
+    );
+
     const renderServiceCards = () => (
         <div className="services-grid">
             {services.length === 0 ? (
@@ -563,17 +806,11 @@ const Dashboard = () => {
                         <div className="service-image">
                             {service.image ? (
                                 <img 
-                                    src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444'}${service.image}`} 
+                                    src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444'}/uploads/services/${service.image.replace('/uploads/', '')}`}
                                     alt={service.name}
                                     onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                        const parent = (e.target as HTMLImageElement).parentElement;
-                                        if (parent) {
-                                            const placeholder = document.createElement('div');
-                                            placeholder.className = 'image-placeholder';
-                                            placeholder.textContent = service.name.charAt(0);
-                                            parent.appendChild(placeholder);
-                                        }
+                                        const fallbackUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444'}${service.image}`;
+                                        (e.target as HTMLImageElement).src = fallbackUrl;
                                     }}
                                 />
                             ) : (
@@ -592,11 +829,15 @@ const Dashboard = () => {
                                 </span>
                             </div>
                             
-                            <p className="service-description">{service.description}</p>
+                            <p className="service-description">
+                                {service.description.length > 100 
+                                    ? `${service.description.substring(0, 100)}...` 
+                                    : service.description}
+                            </p>
                             
                             <div className="service-footer">
                                 <div className="service-meta">
-                                    <span className="service-price">${service.price}</span>
+                                    <span className="service-price">${service.price.toFixed(2)}</span>
                                     {service.technologies && service.technologies.length > 0 && (
                                         <span className="service-tech">
                                             {service.technologies.slice(0, 2).join(', ')}
@@ -608,13 +849,13 @@ const Dashboard = () => {
                                 <div className="service-actions">
                                     <button 
                                         className="btn-edit"
-                                        onClick={() => handleEditClick(service)}
+                                        onClick={() => handleServiceEditClick(service)}
                                     >
                                         <i className="fas fa-edit"></i> Edit
                                     </button>
                                     <button 
                                         className="btn-delete"
-                                        onClick={() => handleDelete(service._id, service.name)}
+                                        onClick={() => handleServiceDelete(service._id, service.name)}
                                     >
                                         <i className="fas fa-trash"></i> Delete
                                     </button>
@@ -627,7 +868,102 @@ const Dashboard = () => {
         </div>
     );
 
-    // Calculate unread counts
+    const renderAchievementCards = () => (
+        <div className="services-grid">
+            {achievements.length === 0 ? (
+                <div className="no-services">
+                    <i className="fas fa-trophy"></i>
+                    <p>No achievements yet. Create your first achievement!</p>
+                </div>
+            ) : (
+                achievements.map(achievement => (
+                    <div key={achievement._id} className="service-card">
+                        <div className="service-image">
+                            {achievement.image ? (
+                                <img 
+                                    src={getAchievementImageUrl(achievement.image)}
+                                    alt={achievement.title}
+                                    onError={(e) => {
+                                        const img = e.target as HTMLImageElement;
+                                        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+                                        
+                                        // Try alternative paths
+                                        const currentSrc = img.src;
+                                        const filename = currentSrc.split('/').pop();
+                                        
+                                        if (filename) {
+                                            // Try uploads/general/ first
+                                            img.src = `${baseUrl}/uploads/general/${filename}`;
+                                            
+                                            // If that fails, try uploads/achievements/
+                                            img.onerror = () => {
+                                                img.src = `${baseUrl}/uploads/achievements/${filename}`;
+                                                
+                                                // If that also fails, show trophy icon
+                                                img.onerror = () => {
+                                                    img.style.display = 'none';
+                                                    const parent = img.parentElement;
+                                                    if (parent) {
+                                                        const placeholder = document.createElement('div');
+                                                        placeholder.className = 'image-placeholder';
+                                                        placeholder.innerHTML = '<i class="fas fa-trophy"></i>';
+                                                        parent.appendChild(placeholder);
+                                                    }
+                                                };
+                                            };
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <div className="image-placeholder">
+                                    <i className="fas fa-trophy"></i>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="service-content">
+                            <div className="service-header">
+                                <h4>{achievement.title}</h4>
+                                <span className="achievement-badge">
+                                    <i className="fas fa-award"></i> Achievement
+                                </span>
+                            </div>
+                            
+                            <p className="service-description">
+                                {achievement.description.length > 100 
+                                    ? `${achievement.description.substring(0, 100)}...` 
+                                    : achievement.description}
+                            </p>
+                            
+                            <div className="service-footer">
+                                <div className="service-meta">
+                                    <span className="service-date">
+                                        <i className="fas fa-calendar"></i> {new Date(achievement.date).toLocaleDateString()}
+                                    </span>
+                                </div>
+                                
+                                <div className="service-actions">
+                                    <button 
+                                        className="btn-edit"
+                                        onClick={() => handleAchievementEditClick(achievement)}
+                                    >
+                                        <i className="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button 
+                                        className="btn-delete"
+                                        onClick={() => handleAchievementDelete(achievement._id, achievement.title)}
+                                    >
+                                        <i className="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))
+            )}
+        </div>
+    );
+
     const unreadMessagesCount = messages.filter(msg => !msg.read).length;
     const unreadNotificationsCount = notifications.filter(notif => !notif.read).length;
 
@@ -635,7 +971,6 @@ const Dashboard = () => {
         <div className="dashboard-dark">
             <Header />
             
-            {/* Notification Popup */}
             {newNotification && (
                 <div className={`notification-popup notification-${newNotification.type}`}>
                     <div className="notification-icon">
@@ -664,7 +999,6 @@ const Dashboard = () => {
                 <hr />
             </div>
             
-            {/* ✅ Dynamic Dashboard Cards */}
             <div className='dashboard-card'>
                 <div className='card-cont'>
                     <div className="dash-cards">
@@ -694,7 +1028,6 @@ const Dashboard = () => {
                     </div>
                 </div>
                 
-                {/* Main Dashboard Content */}
                 <div className='dashboard-content'>
                     <div className="dashboard-controls">
                         <div className="control-left">
@@ -702,7 +1035,8 @@ const Dashboard = () => {
                                 value={selectedOption}
                                 onChange={(e) => {
                                     setSelectedOption(e.target.value);
-                                    resetForm();
+                                    resetServiceForm();
+                                    resetAchievementForm();
                                 }}
                                 className="content-select"
                             >
@@ -714,19 +1048,26 @@ const Dashboard = () => {
                         </div>
                         
                         <div className="control-right">
-                            {selectedOption === 'Service' && !isCreating && (
+                            {selectedOption === 'Service' && !isCreatingService && (
                                 <button 
                                     className="btn-primary"
-                                    onClick={() => setIsCreating(true)}
+                                    onClick={() => setIsCreatingService(true)}
                                 >
                                     <i className="fas fa-plus"></i> Create Service
+                                </button>
+                            )}
+                            {selectedOption === 'Achievement' && !isCreatingAchievement && (
+                                <button 
+                                    className="btn-primary"
+                                    onClick={() => setIsCreatingAchievement(true)}
+                                >
+                                    <i className="fas fa-plus"></i> Create Achievement
                                 </button>
                             )}
                         </div>
                     </div>
                     
                     <div className="dashboard-main-area">
-                        {/* Main Content Area */}
                         <div className="main-content">
                             {dashboardLoading ? (
                                 <div className="loading-content">
@@ -743,14 +1084,14 @@ const Dashboard = () => {
                                 <div className="content-area">
                                     {selectedOption === 'Service' && (
                                         <>
-                                            {isCreating || isEditing ? renderServiceForm() : null}
+                                            {(isCreatingService || isEditingService) && renderServiceForm()}
                                             <div className="services-section">
                                                 <div className="section-header">
                                                     <h3>My Services ({services.length})</h3>
-                                                    {!isCreating && !isEditing && (
+                                                    {!isCreatingService && !isEditingService && (
                                                         <button 
                                                             className="btn-secondary"
-                                                            onClick={() => setIsCreating(true)}
+                                                            onClick={() => setIsCreatingService(true)}
                                                         >
                                                             <i className="fas fa-plus"></i> Add Service
                                                         </button>
@@ -769,28 +1110,23 @@ const Dashboard = () => {
                                     )}
                                     
                                     {selectedOption === 'Achievement' && (
-                                        <div className="achievements-section">
-                                            <h3>Achievements ({achievements.length})</h3>
-                                            {achievements.length === 0 ? (
-                                                <div className="no-achievements">
-                                                    <i className="fas fa-trophy"></i>
-                                                    <p>No achievements yet</p>
+                                        <>
+                                            {(isCreatingAchievement || isEditingAchievement) && renderAchievementForm()}
+                                            <div className="achievements-section">
+                                                <div className="section-header">
+                                                    <h3>My Achievements ({achievements.length})</h3>
+                                                    {!isCreatingAchievement && !isEditingAchievement && (
+                                                        <button 
+                                                            className="btn-secondary"
+                                                            onClick={() => setIsCreatingAchievement(true)}
+                                                        >
+                                                            <i className="fas fa-plus"></i> Add Achievement
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            ) : (
-                                                <div className="achievements-list">
-                                                    {achievements.map(achievement => (
-                                                        <div key={achievement._id} className="achievement-item">
-                                                            <span className="achievement-icon">🏆</span>
-                                                            <div>
-                                                                <h4>{achievement.title}</h4>
-                                                                <p>{achievement.description}</p>
-                                                                <small>{new Date(achievement.date).toLocaleDateString()}</small>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
+                                                {renderAchievementCards()}
+                                            </div>
+                                        </>
                                     )}
                                     
                                     {selectedOption === 'Client' && (

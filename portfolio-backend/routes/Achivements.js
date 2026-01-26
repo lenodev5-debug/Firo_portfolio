@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authService');
-const { uploadImage, handleMulterError } = require('../middleware/upload'); // Changed from upload to uploadImage
+const { uploadImage, handleMulterError } = require('../middleware/upload');
 const {
     createAchievement,
     getAllAchievements,
@@ -9,26 +9,27 @@ const {
     updateAchievement,
     deleteAchievement,
     getMyAchievements
-} = require('../controllers/Achivements'); // Fixed spelling (Achivements to Achievements)
+} = require('../controllers/Achivements'); 
 
-router.get('/', getAllAchievements);
-router.get('/:id', getAchievementById);
+// Add /achievements prefix to all routes
+router.get('/achievements', getAllAchievements);
+router.get('/achievements/:id', getAchievementById);
 
-router.post('/', 
+router.post('/achievements', 
     authMiddleware, 
-    uploadImage.single('image'),  // Changed upload.single to uploadImage.single
+    uploadImage.single('image'),  
     handleMulterError,
     createAchievement
 );
 
-router.put('/:id', 
+router.put('/achievements/:id', 
     authMiddleware, 
-    uploadImage.single('image'),  // Changed upload.single to uploadImage.single
+    uploadImage.single('image'),  
     handleMulterError,
     updateAchievement
 );
 
-router.delete('/:id', authMiddleware, deleteAchievement);
+router.delete('/achievements/:id', authMiddleware, deleteAchievement);
 router.get('/user/my-achievements', authMiddleware, getMyAchievements);
 
 module.exports = router;
