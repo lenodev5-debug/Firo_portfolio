@@ -14,6 +14,7 @@ import './style/contact.css'
 import './style/service.css'
 import "./style/dashboard.css"
 import './style/login.css'
+import './components/Components/dashboard.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -7,6 +7,10 @@ import WebIcon from '../assets/icon/web-design (1).png';
 import CubeIcon from '../assets/icon/cube.png';
 import MobileIcon from '../assets/icon/mobile.png';
 
+import DashboardMessages from './Components/DashboardMessages';
+import DashboardServices from './Components/DashboardServices';
+import DashboardAchievements from './Components/DashboardAchievements';
+
 interface UserProfile {
     _id: string;
     username: string;
@@ -36,6 +40,7 @@ interface Message {
     phone?: string;
     budget?: string;
     timeline?: string;
+    fileImages?: string[];
 }
 
 interface Achievement {
@@ -71,7 +76,7 @@ const Dashboard = () => {
     
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [newNotification, setNewNotification] = useState<Notification | null>(null);
-    const [selectedOption, setSelectedOption] = useState<string>('Project');
+    const [selectedOption, setSelectedOption] = useState<string>('messages');
     
     // Service CRUD State
     const [isCreatingService, setIsCreatingService] = useState(false);
@@ -228,9 +233,14 @@ const Dashboard = () => {
                 }
 
                 try {
-                    const messagesRes = await axios.get(`${API_BASE_URL}/api/contact/messages`);
-                    if (messagesRes.data.success) {
-                        setMessages(messagesRes.data.data || []);
+                    const messagesRes = await axios.get(`${API_BASE_URL}/api/users/contact/messages`);                    if (messagesRes.data.success) {
+                        // Add default status if not present
+                        const messagesWithStatus = (messagesRes.data.data || []).map((msg: any) => ({
+                            ...msg,
+                            status: msg.status || 'new',
+                            read: msg.read || false
+                        }));
+                        setMessages(messagesWithStatus);
                     }
                 } catch (messageErr) {
                     console.log('Messages fetch error:', messageErr.message);
@@ -618,351 +628,22 @@ const Dashboard = () => {
         }
     };
 
-    // ========== RENDER FUNCTIONS ==========
-    const renderServiceForm = () => (
-        <form onSubmit={handleServiceSubmit} className="service-form">
-            <div className="form-header">
-                <h4>{isEditingService ? 'Edit Service' : 'Create New Service'}</h4>
-                <button 
-                    type="button" 
-                    className="btn-cancel"
-                    onClick={resetServiceForm}
-                >
-                    Cancel
-                </button>
-            </div>
-            
-            <div className="form-group">
-                <label>Service Name *</label>
-                <input 
-                    type="text" 
-                    name="name"
-                    placeholder="e.g., E-commerce Website"
-                    className="form-input"
-                    value={serviceFormData.name}
-                    onChange={handleServiceInputChange}
-                    required
-                />
-            </div>
-            
-            <div className="form-group">
-                <label>Service Type *</label>
-                <select 
-                    name="serviceType"
-                    className="form-select"
-                    value={serviceFormData.serviceType}
-                    onChange={handleServiceInputChange}
-                    required
-                >
-                    <option value="web">Web Development</option>
-                    <option value="mobile">Mobile App</option>
-                    <option value="design">Product Design</option>
-                </select>
-            </div>
-            
-            <div className="form-group">
-                <label>Description *</label>
-                <textarea 
-                    name="description"
-                    placeholder="Describe your service..."
-                    className="form-textarea"
-                    rows={4}
-                    value={serviceFormData.description}
-                    onChange={handleServiceInputChange}
-                    required
-                ></textarea>
-            </div>
-            
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Price ($) *</label>
-                    <input 
-                        type="number" 
-                        name="price"
-                        placeholder="0.00"
-                        className="form-input"
-                        value={serviceFormData.price}
-                        onChange={handleServiceInputChange}
-                        required
-                        min="0"
-                        step="0.01"
-                    />
-                </div>
-                
-                <div className="form-group">
-                    <label>Image</label>
-                    <input 
-                        type="file"
-                        accept="image/*"
-                        className="form-file"
-                        onChange={handleServiceFileChange}
-                    />
-                    <small>Leave empty to keep current image</small>
-                </div>
-            </div>
-            
-            <div className="form-group">
-                <label>Technologies</label>
-                <input 
-                    type="text" 
-                    name="technologies"
-                    placeholder="React, Node.js, MongoDB (comma separated)"
-                    className="form-input"
-                    value={serviceFormData.technologies}
-                    onChange={handleServiceInputChange}
-                />
-                <small>Separate technologies with commas</small>
-            </div>
-            
-            <div className="form-actions">
-                <button type="submit" className="btn-primary">
-                    {isEditingService ? 'Update Service' : 'Create Service'}
-                </button>
-            </div>
-        </form>
-    );
+    // ========== MESSAGE HANDLER FUNCTIONS ==========
+    const handleMarkAsRead = (messageId: string) => {
+        setMessages(prev => prev.map(msg => 
+            msg._id === messageId ? { ...msg, read: true } : msg
+        ));
+    };
 
-    const renderAchievementForm = () => (
-        <form onSubmit={handleAchievementSubmit} className="service-form">
-            <div className="form-header">
-                <h4>{isEditingAchievement ? 'Edit Achievement' : 'Create New Achievement'}</h4>
-                <button 
-                    type="button" 
-                    className="btn-cancel"
-                    onClick={resetAchievementForm}
-                >
-                    Cancel
-                </button>
-            </div>
-            
-            <div className="form-group">
-                <label>Title *</label>
-                <input 
-                    type="text" 
-                    name="title"
-                    placeholder="e.g., Best Developer Award 2024"
-                    className="form-input"
-                    value={achievementFormData.title}
-                    onChange={handleAchievementInputChange}
-                    required
-                />
-            </div>
-            
-            <div className="form-group">
-                <label>Description *</label>
-                <textarea 
-                    name="description"
-                    placeholder="Describe your achievement..."
-                    className="form-textarea"
-                    rows={4}
-                    value={achievementFormData.description}
-                    onChange={handleAchievementInputChange}
-                    required
-                ></textarea>
-            </div>
-            
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Date</label>
-                    <input 
-                        type="date" 
-                        name="date"
-                        className="form-input"
-                        value={achievementFormData.date}
-                        onChange={handleAchievementInputChange}
-                    />
-                </div>
-                
-                <div className="form-group">
-                    <label>Image</label>
-                    <input 
-                        type="file"
-                        accept="image/*"
-                        className="form-file"
-                        onChange={handleAchievementFileChange}
-                    />
-                    <small>Upload achievement image/certificate</small>
-                </div>
-            </div>
-            
-            <div className="form-actions">
-                <button type="submit" className="btn-primary">
-                    {isEditingAchievement ? 'Update Achievement' : 'Create Achievement'}
-                </button>
-            </div>
-        </form>
-    );
+    const handleDeleteMessage = (messageId: string) => {
+        setMessages(prev => prev.filter(msg => msg._id !== messageId));
+    };
 
-    const renderServiceCards = () => (
-        <div className="services-grid">
-            {services.length === 0 ? (
-                <div className="no-services">
-                    <i className="fas fa-box-open"></i>
-                    <p>No services yet. Create your first service!</p>
-                </div>
-            ) : (
-                services.map(service => (
-                    <div key={service._id} className="service-card">
-                        <div className="service-image">
-                            {service.image ? (
-                                <img 
-                                    src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444'}/uploads/services/${service.image.replace('/uploads/', '')}`}
-                                    alt={service.name}
-                                    onError={(e) => {
-                                        const fallbackUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444'}${service.image}`;
-                                        (e.target as HTMLImageElement).src = fallbackUrl;
-                                    }}
-                                />
-                            ) : (
-                                <div className="image-placeholder">
-                                    {service.name.charAt(0)}
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="service-content">
-                            <div className="service-header">
-                                <h4>{service.name}</h4>
-                                <span className={`service-type ${service.serviceType}`}>
-                                    {service.serviceType === 'web' ? 'Web' : 
-                                     service.serviceType === 'mobile' ? 'Mobile' : 'Design'}
-                                </span>
-                            </div>
-                            
-                            <p className="service-description">
-                                {service.description.length > 100 
-                                    ? `${service.description.substring(0, 100)}...` 
-                                    : service.description}
-                            </p>
-                            
-                            <div className="service-footer">
-                                <div className="service-meta">
-                                    <span className="service-price">${service.price.toFixed(2)}</span>
-                                    {service.technologies && service.technologies.length > 0 && (
-                                        <span className="service-tech">
-                                            {service.technologies.slice(0, 2).join(', ')}
-                                            {service.technologies.length > 2 && '...'}
-                                        </span>
-                                    )}
-                                </div>
-                                
-                                <div className="service-actions">
-                                    <button 
-                                        className="btn-edit"
-                                        onClick={() => handleServiceEditClick(service)}
-                                    >
-                                        <i className="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button 
-                                        className="btn-delete"
-                                        onClick={() => handleServiceDelete(service._id, service.name)}
-                                    >
-                                        <i className="fas fa-trash"></i> Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))
-            )}
-        </div>
-    );
-
-    const renderAchievementCards = () => (
-        <div className="services-grid">
-            {achievements.length === 0 ? (
-                <div className="no-services">
-                    <i className="fas fa-trophy"></i>
-                    <p>No achievements yet. Create your first achievement!</p>
-                </div>
-            ) : (
-                achievements.map(achievement => (
-                    <div key={achievement._id} className="service-card">
-                        <div className="service-image">
-                            {achievement.image ? (
-                                <img 
-                                    src={getAchievementImageUrl(achievement.image)}
-                                    alt={achievement.title}
-                                    onError={(e) => {
-                                        const img = e.target as HTMLImageElement;
-                                        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
-                                        
-                                        // Try alternative paths
-                                        const currentSrc = img.src;
-                                        const filename = currentSrc.split('/').pop();
-                                        
-                                        if (filename) {
-                                            // Try uploads/general/ first
-                                            img.src = `${baseUrl}/uploads/general/${filename}`;
-                                            
-                                            // If that fails, try uploads/achievements/
-                                            img.onerror = () => {
-                                                img.src = `${baseUrl}/uploads/achievements/${filename}`;
-                                                
-                                                // If that also fails, show trophy icon
-                                                img.onerror = () => {
-                                                    img.style.display = 'none';
-                                                    const parent = img.parentElement;
-                                                    if (parent) {
-                                                        const placeholder = document.createElement('div');
-                                                        placeholder.className = 'image-placeholder';
-                                                        placeholder.innerHTML = '<i class="fas fa-trophy"></i>';
-                                                        parent.appendChild(placeholder);
-                                                    }
-                                                };
-                                            };
-                                        }
-                                    }}
-                                />
-                            ) : (
-                                <div className="image-placeholder">
-                                    <i className="fas fa-trophy"></i>
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="service-content">
-                            <div className="service-header">
-                                <h4>{achievement.title}</h4>
-                                <span className="achievement-badge">
-                                    <i className="fas fa-award"></i> Achievement
-                                </span>
-                            </div>
-                            
-                            <p className="service-description">
-                                {achievement.description.length > 100 
-                                    ? `${achievement.description.substring(0, 100)}...` 
-                                    : achievement.description}
-                            </p>
-                            
-                            <div className="service-footer">
-                                <div className="service-meta">
-                                    <span className="service-date">
-                                        <i className="fas fa-calendar"></i> {new Date(achievement.date).toLocaleDateString()}
-                                    </span>
-                                </div>
-                                
-                                <div className="service-actions">
-                                    <button 
-                                        className="btn-edit"
-                                        onClick={() => handleAchievementEditClick(achievement)}
-                                    >
-                                        <i className="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button 
-                                        className="btn-delete"
-                                        onClick={() => handleAchievementDelete(achievement._id, achievement.title)}
-                                    >
-                                        <i className="fas fa-trash"></i> Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))
-            )}
-        </div>
-    );
+    const handleUpdateMessageStatus = (messageId: string, status: string) => {
+        setMessages(prev => prev.map(msg => 
+            msg._id === messageId ? { ...msg, status: status as any } : msg
+        ));
+    };
 
     const unreadMessagesCount = messages.filter(msg => !msg.read).length;
     const unreadNotificationsCount = notifications.filter(notif => !notif.read).length;
@@ -1040,15 +721,15 @@ const Dashboard = () => {
                                 }}
                                 className="content-select"
                             >
-                                <option value="Project">Projects</option>                                
-                                <option value="Achievement">Achievements</option>                                
-                                <option value="Service">Services</option>                                
-                                <option value="Client">Clients</option>                                
+                                <option value="messages">Messages ({messages.length})</option>
+                                <option value="services">Services ({services.length})</option>
+                                <option value="achievements">Achievements ({achievements.length})</option>
+                                <option value="projects">Projects</option>
                             </select>
                         </div>
                         
                         <div className="control-right">
-                            {selectedOption === 'Service' && !isCreatingService && (
+                            {selectedOption === 'services' && !isCreatingService && (
                                 <button 
                                     className="btn-primary"
                                     onClick={() => setIsCreatingService(true)}
@@ -1056,7 +737,7 @@ const Dashboard = () => {
                                     <i className="fas fa-plus"></i> Create Service
                                 </button>
                             )}
-                            {selectedOption === 'Achievement' && !isCreatingAchievement && (
+                            {selectedOption === 'achievements' && !isCreatingAchievement && (
                                 <button 
                                     className="btn-primary"
                                     onClick={() => setIsCreatingAchievement(true)}
@@ -1082,72 +763,49 @@ const Dashboard = () => {
                                 </div>
                             ) : (
                                 <div className="content-area">
-                                    {selectedOption === 'Service' && (
-                                        <>
-                                            {(isCreatingService || isEditingService) && renderServiceForm()}
-                                            <div className="services-section">
-                                                <div className="section-header">
-                                                    <h3>My Services ({services.length})</h3>
-                                                    {!isCreatingService && !isEditingService && (
-                                                        <button 
-                                                            className="btn-secondary"
-                                                            onClick={() => setIsCreatingService(true)}
-                                                        >
-                                                            <i className="fas fa-plus"></i> Add Service
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                {renderServiceCards()}
-                                            </div>
-                                        </>
+                                    {selectedOption === 'messages' && (
+                                        <DashboardMessages
+                                            messages={messages}
+                                            onMarkAsRead={handleMarkAsRead}
+                                            onDeleteMessage={handleDeleteMessage}
+                                            onUpdateMessageStatus={handleUpdateMessageStatus}
+                                        />
                                     )}
                                     
-                                    {selectedOption === 'Project' && (
+                                    {selectedOption === 'services' && (
+                                        <DashboardServices
+                                            services={services}
+                                            isCreatingService={isCreatingService}
+                                            isEditingService={isEditingService}
+                                            serviceFormData={serviceFormData}
+                                            onServiceInputChange={handleServiceInputChange}
+                                            onServiceFileChange={handleServiceFileChange}
+                                            onServiceSubmit={handleServiceSubmit}
+                                            onServiceEditClick={handleServiceEditClick}
+                                            onServiceDelete={handleServiceDelete}
+                                            resetServiceForm={resetServiceForm}
+                                        />
+                                    )}
+                                    
+                                    {selectedOption === 'achievements' && (
+                                        <DashboardAchievements
+                                            achievements={achievements}
+                                            isCreatingAchievement={isCreatingAchievement}
+                                            isEditingAchievement={isEditingAchievement}
+                                            achievementFormData={achievementFormData}
+                                            onAchievementInputChange={handleAchievementInputChange}
+                                            onAchievementFileChange={handleAchievementFileChange}
+                                            onAchievementSubmit={handleAchievementSubmit}
+                                            onAchievementEditClick={handleAchievementEditClick}
+                                            onAchievementDelete={handleAchievementDelete}
+                                            resetAchievementForm={resetAchievementForm}
+                                        />
+                                    )}
+                                    
+                                    {selectedOption === 'projects' && (
                                         <div className="projects-section">
                                             <h3>Projects Management</h3>
                                             <p>This is where your project management content goes.</p>
-                                        </div>
-                                    )}
-                                    
-                                    {selectedOption === 'Achievement' && (
-                                        <>
-                                            {(isCreatingAchievement || isEditingAchievement) && renderAchievementForm()}
-                                            <div className="achievements-section">
-                                                <div className="section-header">
-                                                    <h3>My Achievements ({achievements.length})</h3>
-                                                    {!isCreatingAchievement && !isEditingAchievement && (
-                                                        <button 
-                                                            className="btn-secondary"
-                                                            onClick={() => setIsCreatingAchievement(true)}
-                                                        >
-                                                            <i className="fas fa-plus"></i> Add Achievement
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                {renderAchievementCards()}
-                                            </div>
-                                        </>
-                                    )}
-                                    
-                                    {selectedOption === 'Client' && (
-                                        <div className="clients-section">
-                                            <h3>Clients ({messages.length})</h3>
-                                            {messages.length === 0 ? (
-                                                <div className="no-messages">
-                                                    <i className="fas fa-comments"></i>
-                                                    <p>No client messages yet</p>
-                                                </div>
-                                            ) : (
-                                                <div className="messages-list">
-                                                    {messages.slice(0, 5).map(message => (
-                                                        <div key={message._id} className="message-item">
-                                                            <strong>{message.username}</strong>
-                                                            <p>{message.message.substring(0, 100)}...</p>
-                                                            <small>{message.email} • {message.project_Type}</small>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
                                         </div>
                                     )}
                                 </div>

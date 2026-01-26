@@ -1,11 +1,12 @@
 const express = require('express');
 const app = express();
 const cors = require('cors'); // Import cors here
+const FrontEnd = process.env.frontend_Endpoint
 
 // ====== Middleware ======
 // CORS MUST come first
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: [FrontEnd],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     credentials: true,
@@ -22,13 +23,15 @@ app.use('/uploads', express.static('uploads'));
 const ownerRoutes = require('./routes/owner');
 const userRoutes = require('./routes/user'); 
 const userServiceRoutes = require('./routes/UserService');
-const achivements = require('./routes/Achivements')
+const achivements = require('./routes/Achivements');
+const contact = require('./routes/contact');
 
 // ====== Routes ======
 app.use('/api/owners', ownerRoutes);
 app.use('/api/users', userRoutes); 
 app.use('/api/user-services', userServiceRoutes);
 app.use('/api', achivements);
+app.use('/api/contact', contact)
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
