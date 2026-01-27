@@ -135,9 +135,11 @@ const Login = () => {
         }
 
         try {
-            // Call your backend login API
+            // ✅ CORRECT: Use environment variable for backend URL
             const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
-            const response = await fetch(`https://firo-portfolio-three.vercel.app/api/owners/login`, {
+            
+            // ✅ CRITICAL FIX: Use API_BASE_URL, not hardcoded frontend URL
+            const response = await fetch(`${API_BASE_URL}/api/owners/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -149,20 +151,29 @@ const Login = () => {
                 credentials: 'include'
             });
 
-            const data = await response.json();
-
+            // Check if response is OK before parsing JSON
             if (!response.ok) {
-                // Check for specific error messages
-                if (data.message && (data.message.toLowerCase().includes('invalid') ||
-                    data.message.toLowerCase().includes('incorrect') ||
-                    data.message.toLowerCase().includes('not found'))) {
-                    setError('Invalid email or password. Please try again.');
-                } else {
-                    throw new Error(data.message || 'Login failed');
+                // Handle HTTP errors (401, 404, 500, etc.)
+                let errorMessage = 'Login failed';
+                
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || `Server error: ${response.status}`;
+                } catch {
+                    errorMessage = `Server error: ${response.status} ${response.statusText}`;
                 }
-                setIsLoading(false);
-                return;
+                
+                // Check for specific error messages
+                if (errorMessage.toLowerCase().includes('invalid') ||
+                    errorMessage.toLowerCase().includes('incorrect') ||
+                    errorMessage.toLowerCase().includes('not found')) {
+                    errorMessage = 'Invalid email or password. Please try again.';
+                }
+                
+                throw new Error(errorMessage);
             }
+
+            const data = await response.json();
 
             // Success - Store token and user data
             if (data.token && data.owner) {
@@ -179,12 +190,25 @@ const Login = () => {
                     navigate('/dashboard');
                 }, 2000);
             } else {
-                throw new Error('No token received from server');
+                throw new Error('Invalid response from server: No token or user data');
             }
 
         } catch (error) {
             console.error('Login error:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';
+            
+            // User-friendly error messages
+            let errorMessage = 'Login failed. Please try again.';
+            
+            if (error instanceof Error) {
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = 'Cannot connect to server. Please check: \n1. Your internet connection \n2. Backend server is running \n3. CORS is properly configured';
+                } else if (error.message.includes('401') || error.message.includes('Invalid')) {
+                    errorMessage = 'Invalid email or password.';
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+            
             setError(errorMessage);
         } finally {
             setIsLoading(false);
@@ -203,11 +227,25 @@ const Login = () => {
                         <p className="auth-subtitle">Sign in to access your portfolio dashboard</p>
                     </div>
 
+                    {/* Debug info (remove in production) */}
+                    {process.env.NODE_ENV === 'development' && (
+                        <div style={{ 
+                            fontSize: '12px', 
+                            color: '#666', 
+                            padding: '10px', 
+                            background: '#f5f5f5', 
+                            borderRadius: '5px',
+                            marginBottom: '15px'
+                        }}>
+                            <strong>Debug:</strong> Backend URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444'}
+                        </div>
+                    )}
+
                     {/* Error/Success Messages */}
                     {error && (
                         <div className="auth-message auth-error">
                             <i className="fas fa-exclamation-circle"></i>
-                            <span>{error}</span>
+                            <span style={{ whiteSpace: 'pre-line' }}>{error}</span>
                             <button className="message-close" onClick={() => setError(null)}>
                                 <i className="fas fa-times"></i>
                             </button>
