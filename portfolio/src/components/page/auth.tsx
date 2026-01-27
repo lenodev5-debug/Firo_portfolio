@@ -136,7 +136,8 @@ const Login = () => {
 
         try {
             // Call your backend login API
-            const response = await fetch('http://localhost:4444/api/owners/login', {
+            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+            const response = await fetch(`${API_BASE_URL}/api/owners/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

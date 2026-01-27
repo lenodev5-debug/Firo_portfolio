@@ -4,6 +4,9 @@ export default function Loading({ onLoadingComplete }) {
     const [progress, setProgress] = useState(0);
     
     useEffect(() => {
+        // ✅ CRITICAL FIX: Use environment variable
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+        
         document.body.style.backgroundColor = '#000000';
         document.body.style.backgroundImage = 'none';
         document.body.style.overflow = 'hidden';
@@ -23,29 +26,42 @@ export default function Loading({ onLoadingComplete }) {
         
         async function fetchData() {
             try {
-                // Fetch all endpoints
+                // ✅ CRITICAL FIX: Use environment variable for all endpoints
                 const endpoints = [
-                    'http://localhost:4444/api/user-services',
-                    'http://localhost:4444/api/owners',
-                    'http://localhost:4444/api/users',
-                    'http://localhost:4444/api'
+                    `${API_BASE_URL}/api/user-services`,
+                    `${API_BASE_URL}/api/owners`,
+                    `${API_BASE_URL}/api/users`,
+                    `${API_BASE_URL}/api`
                 ];
                 
-                // Fetch all endpoints
-                const [userServicesRes, ownersRes, usersRes, achievementsRes] = await Promise.all([
+                // ✅ OPTIONAL IMPROVEMENT: Better error handling
+                const [userServicesRes, ownersRes, usersRes, achievementsRes] = await Promise.allSettled([
                     fetch(endpoints[0]),
                     fetch(endpoints[1]),
                     fetch(endpoints[2]),
                     fetch(endpoints[3])
                 ]);
                 
-                // Parse all responses
-                const [userServices, owners, users, achievements] = await Promise.all([
-                    userServicesRes.json(),
-                    ownersRes.json(),
-                    usersRes.json(),
-                    achievementsRes.json()
-                ]);
+                // Process responses with error tolerance
+                const processResponse = (result) => {
+                    if (result.status === 'fulfilled') {
+                        const response = result.value;
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        console.warn('API response not OK:', response.status);
+                        return { success: false, status: response.status };
+                    }
+                    console.warn('Fetch failed:', result.reason);
+                    return { success: false, error: result.reason.message };
+                };
+                
+                const [userServices, owners, users, achievements] = [
+                    processResponse(userServicesRes),
+                    processResponse(ownersRes),
+                    processResponse(usersRes),
+                    processResponse(achievementsRes)
+                ];
                 
                 // Combine all data
                 const allData = {
@@ -112,6 +128,7 @@ export default function Loading({ onLoadingComplete }) {
         };
     }, [onLoadingComplete]);
 
+    // ✅ KEEP ALL YOUR ORIGINAL STYLES
     return (
         <div className="loading-wrapper">
             <div className="main">
