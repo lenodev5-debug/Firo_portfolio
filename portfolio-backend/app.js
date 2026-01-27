@@ -6,7 +6,7 @@ const FrontEnd = process.env.frontend_Endpoint
 // ====== Middleware ======
 // CORS MUST come first
 app.use(cors({
-    origin: [FrontEnd],
+    origin: ['https://firo-portfolio-three.vercel.app', 'http://localhost:3000', FrontEnd],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     credentials: true,
