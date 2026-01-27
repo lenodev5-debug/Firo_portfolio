@@ -1,35 +1,36 @@
+// database/db.js - SAFE VERSION (WON'T CRASH APP)
 const mongoose = require('mongoose');
-const mongodb_URL = process.env.mongodb_URL; // Make sure this matches Railway variable name!
+const mongodb_URL = process.env.mongodb_URL;
 
-console.log('🔗 Attempting MongoDB connection...');
-console.log('MongoDB URL exists:', !!mongodb_URL);
+console.log('MongoDB module loaded');
 
 if (!mongodb_URL) {
-    console.error('❌ ERROR: mongodb_URL environment variable is not set!');
-    console.log('⚠️ Check Railway environment variables');
-    console.log('⚠️ Continuing without database connection...');
-    // Don't exit - just export mongoose without connection
+    console.log('⚠️ mongodb_URL not found in environment');
+    console.log('✅ App will run without database');
     module.exports = mongoose;
 } else {
+    console.log('Connecting to MongoDB...');
+    
+    // Connect with timeout
     mongoose.connect(mongodb_URL, {
-        serverSelectionTimeoutMS: 10000, // 10 second timeout
+        serverSelectionTimeoutMS: 10000, // 10 seconds
         socketTimeoutMS: 45000,
     })
     .then(() => {
-        console.log('✅ Connected to MongoDB successfully');
+        console.log('✅ MongoDB connected');
     })
     .catch((error) => {
-        console.error('❌ Error connecting to MongoDB:', error.message);
-        console.log('⚠️ Continuing without database connection...');
-        // DON'T call process.exit(1) here! This crashes the app
+        console.error('❌ MongoDB connection error:', error.message);
+        // CRITICAL: DO NOT call process.exit() here!
+        console.log('✅ App continues running without database');
     });
 
     mongoose.connection.on('error', (err) => {
-        console.error('MongoDB connection error:', err.message);
+        console.error('MongoDB runtime error:', err.message);
     });
 
-    mongoose.connection.once('open', () => {
-        console.log('✅ MongoDB connection ready');
+    mongoose.connection.on('disconnected', () => {
+        console.log('MongoDB disconnected');
     });
 
     module.exports = mongoose;
