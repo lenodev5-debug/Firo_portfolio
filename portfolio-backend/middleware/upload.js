@@ -1,7 +1,29 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
+
+// Use dynamic import for uuid (ESM package)
+let uuidGenerator;
+
+// Initialize uuid generator
+(async () => {
+    try {
+        const uuid = await import('uuid');
+        uuidGenerator = uuid.v4;
+    } catch (error) {
+        console.error('Failed to load uuid, using fallback:', error.message);
+        uuidGenerator = () => Date.now() + '-' + Math.round(Math.random() * 1E9);
+    }
+})();
+
+// Helper function to generate unique filename
+const generateUniqueId = () => {
+    if (uuidGenerator) {
+        return uuidGenerator();
+    }
+    // Fallback if uuid isn't loaded yet
+    return Date.now() + '-' + Math.round(Math.random() * 1E9);
+};
 
 const createUploadsDir = (folder) => {
     const dir = `uploads/${folder}`;
@@ -15,28 +37,31 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         let folder = 'general';
         
-        if (req.baseUrl.includes('achievements')) {
+        // Determine folder based on request URL
+        const baseUrl = req.baseUrl || '';
+        if (baseUrl.includes('achievements')) {
             folder = 'achievements';
-        } else if (req.baseUrl.includes('services')) {
+        } else if (baseUrl.includes('services')) {
             folder = 'services';
-        } else if (req.baseUrl.includes('projects')) {
+        } else if (baseUrl.includes('projects')) {
             folder = 'projects';
-        } else if (req.baseUrl.includes('owner')) {
+        } else if (baseUrl.includes('owner')) {
             folder = 'profiles';
-        } else if (req.baseUrl.includes('contact')) {
-            folder = 'contacts'; // Add this for contact form uploads
+        } else if (baseUrl.includes('contact')) {
+            folder = 'contacts';
         }
         
         const uploadDir = createUploadsDir(folder);
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        const uniqueName = uuidv4();
+        const uniqueName = generateUniqueId();
         const extension = path.extname(file.originalname).toLowerCase();
         cb(null, `${uniqueName}${extension}`);
     }
 });
 
+// File filters (same as before)
 const imageFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp|svg/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -73,10 +98,11 @@ const allFilesFilter = (req, file, cb) => {
     }
 };
 
+// Multer configurations
 const uploadImage = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, 
+        fileSize: 5 * 1024 * 1024, // 5MB
         files: 1 
     },
     fileFilter: imageFilter
@@ -85,7 +111,7 @@ const uploadImage = multer({
 const uploadMultipleImages = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, 
+        fileSize: 5 * 1024 * 1024, // 5MB
         files: 5 
     },
     fileFilter: imageFilter
@@ -94,7 +120,7 @@ const uploadMultipleImages = multer({
 const uploadAnyFile = multer({
     storage: storage,
     limits: {
-        fileSize: 10 * 1024 * 1024, 
+        fileSize: 10 * 1024 * 1024, // 10MB
         files: 1
     },
     fileFilter: allFilesFilter
@@ -103,12 +129,13 @@ const uploadAnyFile = multer({
 const uploadContactFile = multer({
     storage: storage,
     limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit
-        files: 3 // Allow up to 3 files
+        fileSize: 10 * 1024 * 1024, // 10MB
+        files: 3
     },
     fileFilter: contactFileFilter
 });
 
+// Error handler
 const handleMulterError = (err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
