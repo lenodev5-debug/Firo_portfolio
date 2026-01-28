@@ -1,50 +1,91 @@
-// ====== SIMPLEST POSSIBLE WORKING SERVER ======
-console.log('🚀 Starting bulletproof server...');
+require('dotenv').config();
 
-try {
-    const http = require('http');
-    
-    const server = http.createServer((req, res) => {
-        console.log(`📨 ${req.method} ${req.url}`);
-        
-        // Set CORS headers
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        res.setHeader('Content-Type', 'application/json');
-        
-        // Handle OPTIONS
-        if (req.method === 'OPTIONS') {
-            res.writeHead(200);
-            res.end();
-            return;
+console.log('🚀 === Railway Server Startup ===');
+console.log('🔧 Environment Check:');
+console.log('   PORT:', process.env.PORT || '8080 (default)');
+console.log('   NODE_ENV:', process.env.NODE_ENV || 'production');
+console.log('   MONGODB_URI:', process.env.mongodb_URL ? '✓ Set' : '✗ Not set');
+console.log('   FRONTEND_URL:', process.env.frontend_Endpoint || 'Not set');
+console.log('   RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN || 'Not set');
+
+// ====== CRITICAL FIX: Load app BEFORE MongoDB connection ======
+// This ensures server starts even if DB connection hangs
+const app = require('./app');
+
+// ====== IMPROVED MongoDB Connection ======
+if (process.env.mongodb_URL) {
+    // Use setTimeout to connect AFTER server is ready
+    setTimeout(() => {
+        try {
+            const mongoose = require('mongoose');
+            
+            console.log('🔗 Attempting MongoDB connection...');
+            
+            mongoose.connect(process.env.mongodb_URL, {
+                serverSelectionTimeoutMS: 5000,
+                socketTimeoutMS: 30000,
+                maxPoolSize: 10,
+            }).then(() => {
+                console.log('✅ MongoDB connected successfully');
+            }).catch(err => {
+                console.log('⚠️ MongoDB connection failed:', err.message);
+                console.log('ℹ️ Running in demo mode - API works without DB');
+            });
+            
+            mongoose.connection.on('error', (err) => {
+                console.error('MongoDB runtime error:', err.message);
+            });
+            
+            mongoose.connection.on('disconnected', () => {
+                console.log('🔌 MongoDB disconnected');
+            });
+            
+        } catch (error) {
+            console.error('Failed to load mongoose:', error.message);
         }
-        
-        // Always return success
-        res.writeHead(200);
-        res.end(JSON.stringify({
-            success: true,
-            message: 'Server is working!',
-            endpoint: req.url,
-            method: req.method,
-            time: new Date().toISOString()
-        }));
-    });
-    
-    const PORT = process.env.PORT || 8080;
-    server.listen(PORT, '0.0.0.0', () => {
-        console.log(`✅ SERVER RUNNING ON PORT ${PORT}`);
-        console.log(`🌐 URL: https://lenodev-production.up.railway.app`);
-        console.log('🎯 Responding to ALL requests with 200 OK');
-    });
-    
-    // Handle errors
-    server.on('error', (error) => {
-        console.error('Server error:', error.message);
-    });
-    
-} catch (error) {
-    console.error('FATAL ERROR:', error.message);
-    console.error(error.stack);
-    process.exit(1);
+    }, 1000); // Wait 1 second after server starts
+} else {
+    console.log('ℹ️ No MongoDB URL - running in demo mode');
 }
+
+// ====== START SERVER (MOST IMPORTANT) ======
+const PORT = process.env.PORT || 8080;
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🎉 SERVER STARTED SUCCESSFULLY!`);
+    console.log(`📡 Port: ${PORT}`);
+    console.log(`🌐 Public URL: https://lenodev-production.up.railway.app`);
+    console.log(`🌐 Railway Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'Not available'}`);
+    console.log(`🏥 Health: /api/health`);
+    console.log(`🔐 Login: POST /api/owners/login`);
+    console.log(`📊 Database: ${process.env.mongodb_URL ? 'Connecting...' : 'Demo mode'}`);
+    console.log(`\n✅ Ready for requests!`);
+});
+
+// ====== IMPROVED ERROR HANDLING ======
+server.on('error', (error) => {
+    console.error('💥 Server startup error:', error.message);
+    if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use!`);
+        process.exit(1);
+    }
+});
+
+// Graceful shutdown for Railway
+process.on('SIGTERM', () => {
+    console.log('🛑 SIGTERM received, shutting down gracefully...');
+    server.close(() => {
+        console.log('✅ HTTP server closed');
+        process.exit(0);
+    });
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('🔥 Uncaught Exception:', error.message);
+    console.error(error.stack);
+    // Don't exit - let server try to recover
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('⚠️ Unhandled Rejection at:', promise);
+    console.error('Reason:', reason);
+});
