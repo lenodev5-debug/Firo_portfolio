@@ -42,7 +42,7 @@ const DashboardAchievements: React.FC<DashboardAchievementsProps> = ({
     resetAchievementForm
 }) => {
     const getAchievementImageUrl = (imagePath?: string): string => {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
         
         if (!imagePath || imagePath.trim() === '') {
             return `${baseUrl}/uploads/general/default-achievement.png`;
@@ -86,7 +86,7 @@ const DashboardAchievements: React.FC<DashboardAchievementsProps> = ({
                                 alt={achievement.title}
                                 onError={(e) => {
                                     const img = e.target as HTMLImageElement;
-                                    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+                                    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
                                     console.log('Achievement image error for:', achievement.title, 'Path:', achievement.image);
                                     
                                     // Try alternative paths

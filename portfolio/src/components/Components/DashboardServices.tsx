@@ -47,7 +47,7 @@ const DashboardServices: React.FC<DashboardServicesProps> = ({
     resetServiceForm
 }) => {
     const getServiceImageUrl = (imagePath: string) => {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
         
         if (!imagePath || imagePath.trim() === '') {
             return `${baseUrl}/uploads/services/default-service.png`;
@@ -92,7 +92,7 @@ const DashboardServices: React.FC<DashboardServicesProps> = ({
                                 alt={service.name}
                                 onError={(e) => {
                                     const img = e.target as HTMLImageElement;
-                                    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+                                    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
                                     console.log('Service image error for:', service.name, 'Path:', service.image);
                                     
                                     // Try alternative paths

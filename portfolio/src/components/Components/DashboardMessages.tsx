@@ -59,7 +59,7 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
         if (window.confirm('Are you sure you want to delete this message?')) {
             try {
                 const token = getAuthToken();
-                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
                 
                 await axios.delete(`${API_BASE_URL}/api/contact/${id}`, {
                     headers: {
@@ -78,7 +78,7 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
     const handleStatusChange = async (id: string, status: string) => {
         try {
             const token = getAuthToken();
-            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
             
             await axios.put(`${API_BASE_URL}/api/contact/${id}`, 
                 { status },
@@ -189,7 +189,7 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
                                             {file.split('/').pop()}
                                         </span>
                                         <a 
-                                            href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444'}${file}`}
+                                            href={`${import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app'}${file}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="attachment-download"
