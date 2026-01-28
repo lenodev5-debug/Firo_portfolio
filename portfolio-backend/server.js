@@ -1,24 +1,27 @@
-// ====== SIMPLE BACKEND SERVER ======
-console.log('🚀 Starting simple backend server...');
+// ====== FIXED BACKEND WITH PROPER CORS ======
+console.log('🚀 Starting backend with proper CORS...');
 
 const http = require('http');
 
 const server = http.createServer((req, res) => {
     console.log(`${req.method} ${req.url} - Origin: ${req.headers.origin || 'none'}`);
     
-    // CORS headers - ALWAYS SET THESE
+    // CORS headers - ALWAYS SET THESE FIRST
     res.setHeader('Access-Control-Allow-Origin', 'https://firo-portfolio-three.vercel.app');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Content-Type', 'application/json');
     
-    // Handle preflight OPTIONS requests
+    // CRITICAL FIX: Handle OPTIONS preflight requests
     if (req.method === 'OPTIONS') {
+        console.log('✈️ Handling OPTIONS preflight request');
         res.writeHead(200);
         res.end();
         return;
     }
+    
+    // Set Content-Type for all other responses
+    res.setHeader('Content-Type', 'application/json');
     
     // SIMPLE ROUTING
     if (req.url === '/api/health' && req.method === 'GET') {
@@ -26,7 +29,11 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({
             status: 'OK',
             time: new Date().toISOString(),
-            message: 'Backend is working'
+            message: 'Backend is working with CORS',
+            cors: {
+                allowedOrigin: 'https://firo-portfolio-three.vercel.app',
+                methods: 'GET, POST, PUT, DELETE, OPTIONS'
+            }
         }));
         return;
     }
@@ -90,16 +97,18 @@ const server = http.createServer((req, res) => {
         return;
     }
     
-    // Handle POST /api/owners/login
+    // Handle POST /api/owners/login - FIXED
     if (req.url === '/api/owners/login' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => body += chunk);
         req.on('end', () => {
+            console.log('🔑 Login attempt with:', body);
+            
             let parsedBody;
             try {
                 parsedBody = JSON.parse(body);
             } catch {
-                parsedBody = {};
+                parsedBody = { email: 'unknown@example.com' };
             }
             
             res.writeHead(200);
@@ -146,6 +155,11 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`🏥 Health check: https://lenodev-production.up.railway.app/api/health`);
     console.log(`🔐 Login endpoint: POST https://lenodev-production.up.railway.app/api/owners/login`);
     console.log('🎯 Ready for requests!\n');
+    
+    // Test message
+    console.log('🧪 To test CORS, run:');
+    console.log(`   curl -H "Origin: https://firo-portfolio-three.vercel.app" \\`);
+    console.log(`        -X OPTIONS https://lenodev-production.up.railway.app/api/owners/login`);
 });
 
 // Error handling

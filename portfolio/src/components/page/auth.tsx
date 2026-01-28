@@ -225,22 +225,6 @@ const Login = () => {
                         <p className="auth-subtitle">Sign in to access your portfolio dashboard</p>
                     </div>
 
-                    {/* Debug info */}
-                    <div style={{ 
-                        fontSize: '12px', 
-                        color: '#666', 
-                        padding: '10px', 
-                        background: '#f5f5f5', 
-                        borderRadius: '5px',
-                        marginBottom: '15px',
-                        border: '1px solid #ddd'
-                    }}>
-                        <strong>Debug Info:</strong><br />
-                        Backend URL: https://lenodev-production.up.railway.app<br />
-                        Endpoint: /api/owners/login<br />
-                        Status: {isLoading ? 'Loading...' : 'Ready'}
-                    </div>
-
                     {/* Error/Success Messages */}
                     {error && (
                         <div className="auth-message auth-error">
