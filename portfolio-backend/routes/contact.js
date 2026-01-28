@@ -1,3 +1,4 @@
+// routes/user.js - CLEANED VERSION
 const express = require('express');
 const router = express.Router();
 const { UserMessage, UpdateMessage, DeleteMessage } = require('../controllers/userController');

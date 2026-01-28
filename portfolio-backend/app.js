@@ -35,6 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // ====== IMPORT ROUTES ======
+const contactRoutes = require('./routes/contact'); // Make sure this file exists
 const ownerRoutes = require('./routes/owner');
 const userRoutes = require('./routes/user');           // Make sure this file exists
 const userServiceRoutes = require('./routes/UserService'); // Make sure this file exists
@@ -47,6 +48,7 @@ app.use('/api/owners', ownerRoutes);           // Routes: /api/owners/profile, /
 app.use('/api/users', userRoutes);             // Routes: /api/users/messages
 app.use('/api/user-services', userServiceRoutes); // Routes: /api/user-services
 app.use('/api/achievements', achievementRoutes);  // Routes: /api/achievements
+app.use('/api', contactRoutes);       // Routes: /api/contact
 
 // ====== TEST ENDPOINTS ======
 app.get('/api/health', (req, res) => {
