@@ -213,32 +213,6 @@ const Login = () => {
         } finally {
             setIsLoading(false);
         }
-
-    // Example: Proper fetch request from your frontend
-async function testBackend() {
-    try {
-        const response = await fetch('https://lenodev-production.up.railway.app/api/health', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            // credentials: 'include' // Only if using cookies
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Backend connected:', data);
-            return data;
-        } else {
-            console.error('❌ Backend error:', response.status);
-        }
-    } catch (error) {
-        console.error('🔥 Network error:');
-    }
-}
-
-// Test all endpoints
-    testBackend();
     };
 
     return (
@@ -259,7 +233,7 @@ async function testBackend() {
                             fontSize: '12px', 
                             color: '#666', 
                             padding: '10px', 
-                            background: '#f5f5f5', 
+                            background: '#160b0b', 
                             borderRadius: '5px',
                             marginBottom: '15px'
                         }}>
