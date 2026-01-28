@@ -4,7 +4,7 @@ const cors = require('cors');
 
 console.log('🔧 Setting up CORS...');
 
-// ====== CORS Configuration ======
+// CORS Configuration
 const allowedOrigins = [
     'https://firo-portfolio-three.vercel.app',
     'http://localhost:3000',
@@ -29,28 +29,26 @@ app.use(cors({
     optionsSuccessStatus: 200
 }));
 
-// ====== Middleware ======
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
-// ====== IMPORT ROUTES ======
-const contactRoutes = require('./routes/contact'); // Make sure this file exists
+// Import Routes
 const ownerRoutes = require('./routes/owner');
-const userRoutes = require('./routes/user');           // Make sure this file exists
-const userServiceRoutes = require('./routes/UserService'); // Make sure this file exists
-const achievementRoutes = require('./routes/Achivements'); // Make sure this file exists
+const userRoutes = require('./routes/user');           // Contact messages
+const userServiceRoutes = require('./routes/UserService');
+const achievementRoutes = require('./routes/Achivements');
 
 console.log('✅ Imported routes');
 
-// ====== USE ROUTES ======
-app.use('/api/owners', ownerRoutes);           // Routes: /api/owners/profile, /api/owners/login
-app.use('/api/users', userRoutes);             // Routes: /api/users/messages
-app.use('/api/user-services', userServiceRoutes); // Routes: /api/user-services
-app.use('/api/achievements', achievementRoutes);  // Routes: /api/achievements
-app.use('/api', contactRoutes);       // Routes: /api/contact
+// Use Routes - IMPORTANT: userRoutes mounted at /api/users
+app.use('/api/owners', ownerRoutes);
+app.use('/api/users', userRoutes);                    // This makes: GET /api/users/messages
+app.use('/api/user-services', userServiceRoutes);
+app.use('/api/achievements', achievementRoutes);
 
-// ====== TEST ENDPOINTS ======
+// Test Endpoints
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'OK',

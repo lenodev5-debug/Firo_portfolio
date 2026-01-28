@@ -104,3 +104,21 @@ exports.DeleteMessage = async(req, res) => {
         });
     }
 }
+
+// GET all messages - Added this function
+exports.GetAllMessages = async (req, res) => {
+    try {
+        const messages = await ContactMessage.find().sort({ createdAt: -1 });
+        res.status(200).json({
+            success: true,
+            count: messages.length,
+            data: messages
+        });
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+}

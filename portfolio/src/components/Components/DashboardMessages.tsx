@@ -49,7 +49,26 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
         setViewMode('detail');
         
         if (!message.read) {
-            onMarkAsRead(message._id);
+            handleMarkAsRead(message._id);
+        }
+    };
+
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            const token = getAuthToken();
+            await axios.put(
+                `${API_BASE_URL}/api/users/${id}`,
+                { read: true },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            onMarkAsRead(id);
+        } catch (error) {
+            console.error('Error marking message as read:', error);
         }
     };
 
@@ -63,13 +82,14 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
             try {
                 const token = getAuthToken();
                 
-                await axios.delete(`${API_BASE_URL}/api/contact/${id}`, {
+                await axios.delete(`${API_BASE_URL}/api/users/${id}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
                 
                 onDeleteMessage(id);
+                handleBackToList();
             } catch (error) {
                 console.error('Error deleting message:', error);
                 alert('Failed to delete message');
@@ -81,7 +101,8 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
         try {
             const token = getAuthToken();
             
-            await axios.put(`${API_BASE_URL}/api/contact/${id}`, 
+            await axios.put(
+                `${API_BASE_URL}/api/users/${id}`, 
                 { status },
                 {
                     headers: {
@@ -203,20 +224,6 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
                             </div>
                         </div>
                     )}
-
-                    <div className="message-reply-section">
-                        <h4>Quick Reply</h4>
-                        <form className="reply-form">
-                            <textarea 
-                                placeholder={`Dear ${selectedMessage.username},\n\nThank you for contacting me regarding your ${selectedMessage.project_Type} project...`}
-                                rows={4}
-                                className="reply-textarea"
-                            ></textarea>
-                            <button type="submit" className="btn-primary">
-                                <i className="fas fa-reply"></i> Send Reply
-                            </button>
-                        </form>
-                    </div>
                 </div>
             </div>
         );
@@ -269,6 +276,7 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
                             key={message._id} 
                             className={`message-item ${!message.read ? 'unread' : ''}`}
                             onClick={() => handleViewMessage(message)}
+                            style={{ cursor: 'pointer' }}
                         >
                             <div className="message-item-header">
                                 <div className="message-sender-info">
