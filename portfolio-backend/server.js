@@ -33,9 +33,9 @@ const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('\n🎉 ===== SERVER STARTED =====');
     console.log(`📡 Port: ${PORT}`);
-    console.log(`🌐 Public URL: https://lenodev-production.up.railway.app`);
-    console.log(`🏥 Health Check: https://lenodev-production.up.railway.app/api/health`);
-    console.log(`🧪 CORS Test: https://lenodev-production.up.railway.app/api/cors-test`);
+    console.log(`🌐 Railway Public Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'Not set'}`);
+    console.log(`🏥 Health Check: /api/health`);
+    console.log(`🧪 CORS Test: /api/cors-test`);
     console.log('✅ Ready for requests!\n');
 });
 

@@ -52,9 +52,6 @@ const corsOptions = {
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight OPTIONS requests explicitly
-// app.options('*', cors(corsOptions));
-
 // ====== MIDDLEWARE ======
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -101,20 +98,45 @@ app.get('/api/cors-test', (req, res) => {
     });
 });
 
-// API endpoints (your actual routes)
-app.post('/api/owners/login', (req, res) => {
-    console.log('🔑 Login attempt for:', req.body.email || 'unknown');
+// ====== CRITICAL: ADD MISSING ENDPOINTS ======
+// GET /api/owners - Your frontend is trying to call this!
+app.get('/api/owners', (req, res) => {
+    console.log('👤 GET /api/owners called from:', req.headers.origin);
     res.json({
         success: true,
-        token: 'demo-jwt-token-' + Date.now(),
-        user: {
-            id: 1,
-            email: req.body.email || 'demo@example.com',
-            name: 'Demo User'
-        }
+        data: [
+            {
+                id: 1,
+                name: 'Demo Owner',
+                email: 'owner@example.com',
+                role: 'admin',
+                createdAt: new Date().toISOString()
+            }
+        ],
+        count: 1,
+        message: 'Owners data retrieved',
+        timestamp: new Date().toISOString()
     });
 });
 
+// POST /api/owners/login - Already exists but adding better logging
+app.post('/api/owners/login', (req, res) => {
+    console.log('🔑 Login attempt for:', req.body.email || 'unknown', 'from:', req.headers.origin);
+    res.json({
+        success: true,
+        token: 'jwt-demo-token-' + Date.now(),
+        user: {
+            id: 1,
+            email: req.body.email || 'demo@example.com',
+            name: 'Demo User',
+            role: 'admin'
+        },
+        message: 'Login successful',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Other API endpoints
 app.get('/api/users', (req, res) => {
     res.json({
         success: true,
@@ -135,15 +157,22 @@ app.get('/api/user-services', (req, res) => {
 app.get('/api/achievements', (req, res) => {
     res.json({
         success: true,
-        data: [],
+        data: [
+            { id: 1, title: 'First Project', year: 2023 },
+            { id: 2, title: 'Client Award', year: 2024 }
+        ],
+        count: 2,
         message: 'Achievements endpoint'
     });
 });
 
-app.get('/api/contact', (req, res) => {
+app.post('/api/contact', (req, res) => {
+    console.log('📧 Contact form submission:', req.body);
     res.json({
         success: true,
-        message: 'Contact endpoint - would save contact form data'
+        message: 'Thank you for your message! We will get back to you soon.',
+        receivedData: req.body,
+        timestamp: new Date().toISOString()
     });
 });
 
@@ -156,11 +185,12 @@ app.get('/api', (req, res) => {
         endpoints: [
             'GET    /api/health',
             'GET    /api/cors-test',
+            'GET    /api/owners',
             'POST   /api/owners/login',
             'GET    /api/users',
             'GET    /api/user-services',
             'GET    /api/achievements',
-            'GET    /api/contact'
+            'POST   /api/contact'
         ],
         cors: {
             allowedOrigins: allowedOrigins
@@ -174,20 +204,31 @@ app.get('/', (req, res) => {
         name: 'Portfolio Backend API',
         status: 'running',
         version: '1.0.0',
-        documentation: '/api'
+        documentation: '/api',
+        cors: {
+            enabled: true,
+            frontend: 'https://firo-portfolio-three.vercel.app'
+        }
     });
 });
 
-// 404 handler
+// 404 handler - Update with all available endpoints
 app.use((req, res) => {
+    console.log('❌ 404 - Route not found:', req.method, req.path);
     res.status(404).json({
         success: false,
         error: 'Not Found',
         message: `Cannot ${req.method} ${req.path}`,
         availableEndpoints: [
-            '/api',
-            '/api/health',
-            '/api/cors-test'
+            'GET    /api',
+            'GET    /api/health',
+            'GET    /api/cors-test',
+            'GET    /api/owners',
+            'POST   /api/owners/login',
+            'GET    /api/users',
+            'GET    /api/user-services',
+            'GET    /api/achievements',
+            'POST   /api/contact'
         ]
     });
 });
@@ -195,6 +236,8 @@ app.use((req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
     console.error('🔥 Server error:', err.message);
+    console.error('Request from:', req.headers.origin);
+    console.error('Request path:', req.path);
     
     // Special handling for CORS errors
     if (err.message.includes('CORS') || err.message.includes('allowed by CORS')) {
@@ -204,14 +247,16 @@ app.use((err, req, res, next) => {
             message: 'Request blocked by CORS policy',
             solution: 'Your origin is not in the allowed list',
             allowedOrigins: allowedOrigins,
-            yourOrigin: req.headers.origin || 'Not provided'
+            yourOrigin: req.headers.origin || 'Not provided',
+            timestamp: new Date().toISOString()
         });
     }
     
     res.status(500).json({
         success: false,
         error: 'Internal Server Error',
-        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+        timestamp: new Date().toISOString()
     });
 });
 
