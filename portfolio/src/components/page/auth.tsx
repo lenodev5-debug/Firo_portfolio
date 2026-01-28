@@ -135,11 +135,12 @@ const Login = () => {
         }
 
         try {
-            // ✅ CORRECT: Use environment variable for backend URL
-            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+            // ✅ DIRECT URL - SIMPLE AND RELIABLE
+            const BACKEND_URL = 'https://lenodev-production.up.railway.app';
             
-            // ✅ CRITICAL FIX: Use API_BASE_URL, not hardcoded frontend URL
-            const response = await fetch(`${API_BASE_URL}/api/owners/login`, {
+            console.log('🔍 Calling backend:', `${BACKEND_URL}/api/owners/login`);
+            
+            const response = await fetch(`${BACKEND_URL}/api/owners/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -147,23 +148,24 @@ const Login = () => {
                 body: JSON.stringify({
                     email: formData.email,
                     password: formData.password
-                }),
-                credentials: 'include'
+                })
+                // Don't use credentials unless you need cookies
+                // credentials: 'include'
             });
 
-            // Check if response is OK before parsing JSON
+            console.log('🔍 Response status:', response.status);
+            
             if (!response.ok) {
-                // Handle HTTP errors (401, 404, 500, etc.)
                 let errorMessage = 'Login failed';
                 
                 try {
                     const errorData = await response.json();
+                    console.log('🔍 Error data:', errorData);
                     errorMessage = errorData.message || `Server error: ${response.status}`;
                 } catch {
                     errorMessage = `Server error: ${response.status} ${response.statusText}`;
                 }
                 
-                // Check for specific error messages
                 if (errorMessage.toLowerCase().includes('invalid') ||
                     errorMessage.toLowerCase().includes('incorrect') ||
                     errorMessage.toLowerCase().includes('not found')) {
@@ -174,36 +176,32 @@ const Login = () => {
             }
 
             const data = await response.json();
+            console.log('🔍 Login success data:', data);
 
-            // Success - Store token and user data
             if (data.token && data.owner) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.owner));
                 
                 setSuccess('Login successful! Redirecting to dashboard...');
-                
-                // Clear form
                 setFormData({ email: '', password: '' });
 
-                // Redirect to dashboard after 2 seconds
                 setTimeout(() => {
                     navigate('/dashboard');
                 }, 2000);
             } else {
-                throw new Error('Invalid response from server: No token or user data');
+                throw new Error('Invalid response from server');
             }
 
         } catch (error) {
             console.error('Login error:', error);
             
-            // User-friendly error messages
             let errorMessage = 'Login failed. Please try again.';
             
             if (error instanceof Error) {
-                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    errorMessage = 'Cannot connect to server. Please check: \n1. Your internet connection \n2. Backend server is running \n3. CORS is properly configured';
-                } else if (error.message.includes('401') || error.message.includes('Invalid')) {
-                    errorMessage = 'Invalid email or password.';
+                if (error.message.includes('Failed to fetch') || 
+                    error.message.includes('NetworkError') ||
+                    error.message.includes('Network request failed')) {
+                    errorMessage = 'Cannot connect to server. Please check:';
                 } else {
                     errorMessage = error.message;
                 }
@@ -227,19 +225,21 @@ const Login = () => {
                         <p className="auth-subtitle">Sign in to access your portfolio dashboard</p>
                     </div>
 
-                    {/* Debug info (remove in production) */}
-                    {process.env.NODE_ENV === 'development' && (
-                        <div style={{ 
-                            fontSize: '12px', 
-                            color: '#666', 
-                            padding: '10px', 
-                            background: '#160b0b', 
-                            borderRadius: '5px',
-                            marginBottom: '15px'
-                        }}>
-                            <strong>Debug:</strong> Backend URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444'}
-                        </div>
-                    )}
+                    {/* Debug info */}
+                    <div style={{ 
+                        fontSize: '12px', 
+                        color: '#666', 
+                        padding: '10px', 
+                        background: '#f5f5f5', 
+                        borderRadius: '5px',
+                        marginBottom: '15px',
+                        border: '1px solid #ddd'
+                    }}>
+                        <strong>Debug Info:</strong><br />
+                        Backend URL: https://lenodev-production.up.railway.app<br />
+                        Endpoint: /api/owners/login<br />
+                        Status: {isLoading ? 'Loading...' : 'Ready'}
+                    </div>
 
                     {/* Error/Success Messages */}
                     {error && (
