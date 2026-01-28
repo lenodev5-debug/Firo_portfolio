@@ -4,8 +4,8 @@ const { login, getProfile, createOwner, changePassword, updateProfile } = requir
 const { authMiddleware } = require('../middleware/authService');
 
 // Public routes
-router.post('/register', createOwner); // Add this line
-router.post('/login',login);
+router.post('/register', createOwner);
+router.post('/login', login);
 
 // Protected routes (require authentication)
 router.post('/change-password', authMiddleware, changePassword);

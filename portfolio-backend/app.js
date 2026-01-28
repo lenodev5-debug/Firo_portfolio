@@ -1,105 +1,94 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 
-console.log('🔧 Loading Express app...');
+console.log('🔧 Setting up CORS...');
 
-// ====== SIMPLEST POSSIBLE CORS ======
-app.use((req, res, next) => {
-    // ALWAYS allow requests from your frontend
-    res.header('Access-Control-Allow-Origin', 'https://firo-portfolio-three.vercel.app');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-    
-    // Handle preflight OPTIONS requests
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+// ====== CORS Configuration ======
+const allowedOrigins = [
+    'https://firo-portfolio-three.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+];
+
+if (process.env.frontend_Endpoint) {
+    const frontendOrigin = process.env.frontend_Endpoint.trim();
+    if (!allowedOrigins.includes(frontendOrigin)) {
+        allowedOrigins.push(frontendOrigin);
     }
-    
-    next();
-});
+}
 
-// Basic middleware
+console.log('Allowed origins:', allowedOrigins);
+
+// Apply CORS middleware
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    optionsSuccessStatus: 200
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ====== ALL YOUR ENDPOINTS ======
+// ====== IMPORT ROUTES ======
+const ownerRoutes = require('./routes/owner');
 
-// Health check - ALWAYS WORKS
+// ====== USE ROUTES ======
+app.use('/api/owners', ownerRoutes);
+
+// ====== OTHER ENDPOINTS ======
 app.get('/api/health', (req, res) => {
-    console.log('❤️ Health check from:', req.headers.origin || 'unknown');
     res.json({
-        status: 'healthy',
-        server: 'running',
-        time: new Date().toISOString(),
-        cors: 'enabled'
+        status: 'OK',
+        message: 'Server is running',
+        timestamp: new Date().toISOString()
     });
 });
 
-// Owners endpoints
-app.get('/api/owners', (req, res) => {
-    console.log('👤 GET /api/owners called');
-    res.json({
-        success: true,
-        data: [{ id: 1, name: 'Demo Owner' }],
-        count: 1
-    });
-});
-
-app.post('/api/owners/login', (req, res) => {
-    console.log('🔑 Login attempt:', req.body.email || 'no email');
-    res.json({
-        success: true,
-        token: 'demo-token-' + Date.now(),
-        user: { id: 1, email: req.body.email || 'demo@example.com' }
-    });
-});
-
-// Other GET endpoints your frontend wants
 app.get('/api/users', (req, res) => {
-    res.json({ success: true, data: [], count: 0 });
+    res.json({ message: 'Users endpoint', data: [] });
 });
 
 app.get('/api/user-services', (req, res) => {
-    res.json({ success: true, data: [], count: 0 });
+    res.json({ message: 'User services endpoint', data: [] });
 });
 
 app.get('/api/achievements', (req, res) => {
-    res.json({ success: true, data: [], count: 0 });
+    res.json({ message: 'Achievements endpoint', data: [] });
 });
 
 app.get('/api', (req, res) => {
     res.json({
-        api: 'Portfolio Backend',
+        success: true,
+        message: 'Portfolio API',
+        version: '1.0.0',
         endpoints: [
-            'GET  /api',
-            'GET  /api/health',
-            'GET  /api/owners',
-            'POST /api/owners/login',
-            'GET  /api/users',
-            'GET  /api/user-services',
-            'GET  /api/achievements'
+            '/api/health',
+            '/api/owners/login (POST)',
+            '/api/owners/register (POST)',
+            '/api/users',
+            '/api/user-services',
+            '/api/achievements'
         ]
     });
 });
 
-// Root
 app.get('/', (req, res) => {
-    res.json({ 
-        name: 'Portfolio API',
+    res.json({
+        name: 'Portfolio Backend API',
         status: 'running',
-        cors: 'enabled for https://firo-portfolio-three.vercel.app'
+        version: '1.0.0'
     });
 });
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).json({ 
-        error: 'Not found',
-        path: req.path,
-        method: req.method
+    res.status(404).json({
+        success: false,
+        message: `Route not found: ${req.method} ${req.originalUrl}`
     });
 });
 
-console.log('✅ Express app ready');
 module.exports = app;
