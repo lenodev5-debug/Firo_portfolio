@@ -1,9 +1,11 @@
+// routes/user.js - CLEANED VERSION
 const express = require('express');
 const router = express.Router();
 const { UserMessage, UpdateMessage, DeleteMessage } = require('../controllers/userController');
 const { uploadContactFile, handleMulterError } = require('../middleware/upload');
 const ContactMessage = require('../models/user');
 
+// GET all messages
 router.get('/messages', async (req, res) => {
     try {
         const messages = await ContactMessage.find().sort({ createdAt: -1 });
@@ -21,13 +23,17 @@ router.get('/messages', async (req, res) => {
     }
 });
 
+// POST new message
 router.post('/', 
     uploadContactFile.array('files', 3), 
     handleMulterError,
     UserMessage
 );
 
+// UPDATE message
 router.put('/:id', UpdateMessage);
+
+// DELETE message
 router.delete('/:id', DeleteMessage);
 
 module.exports = router;

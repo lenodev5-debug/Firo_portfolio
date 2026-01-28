@@ -11,7 +11,6 @@ const allowedOrigins = [
     'http://localhost:5173'
 ];
 
-// Add frontend endpoint from environment
 if (process.env.frontend_Endpoint) {
     const frontendOrigin = process.env.frontend_Endpoint.trim();
     if (!allowedOrigins.includes(frontendOrigin)) {
@@ -22,7 +21,6 @@ if (process.env.frontend_Endpoint) {
 
 console.log('Allowed origins:', allowedOrigins);
 
-// Apply CORS middleware
 app.use(cors({
     origin: allowedOrigins, 
     credentials: true,
@@ -34,41 +32,31 @@ app.use(cors({
 // ====== Middleware ======
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve uploads directory
 app.use('/uploads', express.static('uploads'));
 
-// ====== IMPORT ACTUAL ROUTES ======
+// ====== IMPORT ROUTES ======
 const ownerRoutes = require('./routes/owner');
-const userRoutes = require('./routes/user'); // Changed from require('./routes/userController')
-const userServiceRoutes = require('./routes/UserService');
-const achievementRoutes = require('./routes/Achivements');
+const userRoutes = require('./routes/user');           // Make sure this file exists
+const userServiceRoutes = require('./routes/UserService'); // Make sure this file exists
+const achievementRoutes = require('./routes/Achivements'); // Make sure this file exists
 
-console.log('✅ Imported routes: owners, users, userService, achievements');
+console.log('✅ Imported routes');
 
-// ====== USE ACTUAL ROUTES ======
-app.use('/api/owners', ownerRoutes);          // This gives us /api/owners/profile
-app.use('/api/users', userRoutes);            // This gives us /api/users/messages and /api/users/contact/messages
-app.use('/api/user-services', userServiceRoutes); // This gives us /api/user-services
-app.use('/api/achievements', achievementRoutes);  // This gives us /api/achievements
+// ====== USE ROUTES ======
+app.use('/api/owners', ownerRoutes);           // Routes: /api/owners/profile, /api/owners/login
+app.use('/api/users', userRoutes);             // Routes: /api/users/messages
+app.use('/api/user-services', userServiceRoutes); // Routes: /api/user-services
+app.use('/api/achievements', achievementRoutes);  // Routes: /api/achievements
 
-// ====== TEST/HEALTH ENDPOINTS ======
-// Health endpoint (always works)
+// ====== TEST ENDPOINTS ======
 app.get('/api/health', (req, res) => {
-    console.log('Health check from:', req.headers.origin || 'No origin');
     res.json({
         status: 'OK',
-        message: 'Server is running on Railway',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'production',
-        cors: {
-            allowedOrigins: allowedOrigins,
-            requestOrigin: req.headers.origin || 'None'
-        }
+        message: 'Server is running',
+        timestamp: new Date().toISOString()
     });
 });
 
-// API Documentation
 app.get('/api', (req, res) => {
     res.json({
         success: true,
@@ -76,17 +64,15 @@ app.get('/api', (req, res) => {
         version: '1.0.0',
         endpoints: [
             '/api/health',
-            '/api/owners/login (POST)',
-            '/api/owners/profile (GET - protected)',
-            '/api/users/messages (GET)',
-            '/api/users/contact/messages (GET - alternative)',
-            '/api/user-services (GET, POST, PUT, DELETE)',
-            '/api/achievements (GET, POST, PUT, DELETE)'
+            '/api/owners/login',
+            '/api/owners/profile',
+            '/api/users/messages',
+            '/api/user-services',
+            '/api/achievements'
         ]
     });
 });
 
-// Root endpoint
 app.get('/', (req, res) => {
     res.json({
         name: 'Portfolio Backend API',
@@ -96,7 +82,7 @@ app.get('/', (req, res) => {
 });
 
 // 404 handler
-app.use((req, res, next) => {
+app.use((req, res) => {
     console.log('404 Route not found:', req.method, req.originalUrl);
     res.status(404).json({
         success: false,
