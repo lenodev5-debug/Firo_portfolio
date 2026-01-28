@@ -15,7 +15,7 @@ export default function Awards() {
         const fetchAwards = async () => {
             setLoading(true);
             try {
-                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
                 const response = await fetch(`${API_BASE_URL}/api/achievements`);
                 
                 if (response.ok) {
@@ -63,7 +63,7 @@ export default function Awards() {
     // Handle image loading errors
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, originalSrc: string) => {
         const img = e.target as HTMLImageElement;
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
         
         // Extract filename from original src
         let filename = '';

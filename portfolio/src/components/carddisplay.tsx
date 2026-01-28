@@ -17,7 +17,7 @@ export default function CardDisplay() {
     useEffect(() => {
         const fetchCounts = async () => {
             try {
-                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4444';
+                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
                 
                 // Option 1: Try the stats endpoint first
                 try {
