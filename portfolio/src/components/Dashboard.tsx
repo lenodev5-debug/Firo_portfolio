@@ -1,7 +1,6 @@
-// Dashboard.tsx - Complete Optimized Version
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios, { AxiosInstance, CancelTokenSource } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import Header from './Header';
 import Profile from '../assets/bak/lenodevprofile.jpg';
 import WebIcon from '../assets/icon/web-design (1).png';
@@ -203,12 +202,13 @@ const useDashboardData = () => {
             const api = createApi();
             const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
 
-            // Fetch all data in parallel
+            // Fetch all data in parallel - FIXED MESSAGES ENDPOINT
             const [profileRes, servicesRes, achievementsRes, messagesRes] = await Promise.allSettled([
                 api.get('/owners/profile'),
                 api.get('/user-services'),
                 api.get('/achievements'),
-                axios.get(`${API_BASE_URL}/api/users/contact/messages`)
+                // FIXED: Changed from '/users/contact/messages' to '/users/messages'
+                axios.get(`${API_BASE_URL}/api/users/messages`)
             ]);
 
             // Handle profile data
@@ -218,7 +218,6 @@ const useDashboardData = () => {
 
             // Handle services data
             if (servicesRes.status === 'fulfilled' && servicesRes.value.data.success) {
-                // Return services and counts for the parent component
                 return {
                     services: servicesRes.value.data.data,
                     serviceCounts: calculateServiceCounts(servicesRes.value.data.data)
@@ -424,7 +423,7 @@ const Dashboard = () => {
         };
     }, []);
 
-    // Data Fetching
+    // Data Fetching - FIXED MESSAGES ENDPOINT HERE TOO
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -438,12 +437,13 @@ const Dashboard = () => {
                 const api = createApi();
                 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
 
-                // Fetch all data in parallel
+                // Fetch all data in parallel - FIXED MESSAGES ENDPOINT
                 const [profileRes, servicesRes, achievementsRes, messagesRes] = await Promise.allSettled([
                     api.get('/owners/profile'),
                     api.get('/user-services'),
                     api.get('/achievements'),
-                    axios.get(`${API_BASE_URL}/api/users/contact/messages`)
+                    // FIXED: Changed from '/users/contact/messages' to '/users/messages'
+                    axios.get(`${API_BASE_URL}/api/users/messages`)
                 ]);
 
                 // Process profile
