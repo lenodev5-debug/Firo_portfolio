@@ -33,6 +33,9 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
     const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
     const [filter, setFilter] = useState<'all' | 'new' | 'replied' | 'archived'>('all');
 
+    // Direct API URL
+    const API_BASE_URL = 'https://lenodev-production.up.railway.app';
+
     const getAuthToken = () => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -59,7 +62,6 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
         if (window.confirm('Are you sure you want to delete this message?')) {
             try {
                 const token = getAuthToken();
-                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
                 
                 await axios.delete(`${API_BASE_URL}/api/contact/${id}`, {
                     headers: {
@@ -78,7 +80,6 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
     const handleStatusChange = async (id: string, status: string) => {
         try {
             const token = getAuthToken();
-            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
             
             await axios.put(`${API_BASE_URL}/api/contact/${id}`, 
                 { status },
@@ -105,6 +106,7 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
         return true;
     });
 
+    // Detail View
     if (viewMode === 'detail' && selectedMessage) {
         return (
             <div className="message-detail-view">
@@ -189,7 +191,7 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
                                             {file.split('/').pop()}
                                         </span>
                                         <a 
-                                            href={`${import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app'}${file}`}
+                                            href={`${API_BASE_URL}${file}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="attachment-download"
@@ -220,6 +222,7 @@ const DashboardMessages: React.FC<DashboardMessagesProps> = ({
         );
     }
 
+    // List View
     return (
         <div className="dashboard-messages">
             <div className="messages-header">
