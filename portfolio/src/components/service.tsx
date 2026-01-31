@@ -216,7 +216,7 @@ export default function Service({ serviceData }) {
                 ))}
             </div>
 
-            <div className="services-main">
+            <div className="services-main" style={{width: "70%", margin: "0 10% 0 100px"}}>
                 <div className="services-profile-section">
                     <div className="services-profile-circle">
                         <img src={ProfileImage} alt="Firomsa Misagana" />
@@ -264,9 +264,9 @@ export default function Service({ serviceData }) {
                             {currentContent.subTitle}
                         </p>
                         
-                        <div className="services-grid">
+                        <div className="services-grid" >
                             {currentContent.services.map((service, index) => (
-                                <div key={index} className="service-card">
+                                <div key={index} className="service-card" style={{backgroundColor: "#ffffff"}}>
                                     <h3>
                                         <span className="service-icon">{service.title.split(' ')[0]}</span> {service.title.split(' ').slice(1).join(' ')}
                                     </h3>
