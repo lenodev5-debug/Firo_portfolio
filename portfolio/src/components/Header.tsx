@@ -92,6 +92,14 @@ export default function Header() {
         navigate('/dashboard');
     };
 
+    const handleTokenRemove = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsLoggedIn(false);
+        setUser(null);
+        closeMenu();
+        navigate('/auth/user/login');
+    }
     const handleNavClick = () => {
         closeMenu();
         // If you have a single-page app with sections, scroll to top
@@ -178,11 +186,17 @@ export default function Header() {
                                     >
                                         <i className="fas fa-tachometer-alt"></i> Dashboard
                                     </button>
+                                    <button 
+                                        className="header-btn mobile-header-btn dashboard-btn"
+                                        onClick={handleTokenRemove}
+                                    >
+                                        <i className="fas fa-tachometer-alt"></i> Logout
+                                    </button>
                                 </li>
                             </>
                         ) : (
                            null
-                        )}
+                           )}
                     </ul>
                 </nav>
             </div>
