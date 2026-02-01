@@ -149,6 +149,12 @@ export default function Header() {
                                         <i className="fas fa-tachometer-alt"></i> Dashboard
                                     </button>
                                 </li>
+                                    <button 
+                                        className="header-btn mobile-header-btn dashboard-btn"
+                                        onClick={handleTokenRemove}
+                                    >
+                                        <i className="fas fa-tachometer-alt"></i> Logout
+                                    </button>
                             </>
                         ) : (
                            null
