@@ -995,6 +995,11 @@ const Dashboard: React.FC = () => {
             />
             
             {/* Profile Header */}
+            <div style={{
+                width:" 100%",
+                height: "100px",
+                backgroundColor: "#333333"
+            }}></div>
             <div className='profile-header'>
                 <img 
                     src={user?.avatar || Profile} 
