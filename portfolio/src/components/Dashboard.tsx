@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import Header from './Header';
 import Profile from '../assets/bak/lenodevprofile.jpg';
 import WebIcon from '../assets/icon/web-design (1).png';
@@ -8,9 +8,11 @@ import CubeIcon from '../assets/icon/cube.png';
 import MobileIcon from '../assets/icon/mobile.png';
 
 import DashboardMessages from './Components/DashboardMessages';
-import ServiceList from './Components/ServiceList';
 import ServiceForm from './Components/ServiceForm';
+import ServiceList from './Components/ServiceList';
 import DashboardAchievements from './Components/DashboardAchievements';
+import ErrorBoundary from './Components/ErrorBoundary';
+import NotificationPopup from './Components/NotificationPopup';
 
 // Interfaces
 interface UserProfile {
@@ -119,11 +121,11 @@ const useApi = () => {
         return token;
     };
 
-    const createApi = (): import("axios").AxiosInstance => {
+    const createApi = (): AxiosInstance => {
         const token = getAuthToken();
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
         
-        return axios.create({
+        const api = axios.create({
             baseURL: `${API_BASE_URL}/api`,
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -131,13 +133,27 @@ const useApi = () => {
             },
             timeout: 10000
         });
+        
+        // Add response interceptor to handle 401 errors
+        api.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    navigate('/auth/user/login');
+                }
+                return Promise.reject(error);
+            }
+        );
+        
+        return api;
     };
 
-    const createFormDataApi = (): import("axios").AxiosInstance => {
+    const createFormDataApi = (): AxiosInstance => {
         const token = getAuthToken();
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
         
-        return axios.create({
+        const api = axios.create({
             baseURL: `${API_BASE_URL}/api`,
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -145,6 +161,20 @@ const useApi = () => {
             },
             timeout: 30000
         });
+        
+        // Add response interceptor to handle 401 errors
+        api.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    navigate('/auth/user/login');
+                }
+                return Promise.reject(error);
+            }
+        );
+        
+        return api;
     };
 
     return { createApi, createFormDataApi };
@@ -208,7 +238,9 @@ const calculateServiceCounts = (services: Service[]): ServiceCounts => {
     const counts = { web: 0, design: 0, mobile: 0, total: 0 };
     
     services.forEach(service => {
-        counts[service.serviceType]++;
+        if (service.serviceType === 'web') counts.web++;
+        else if (service.serviceType === 'design') counts.design++;
+        else if (service.serviceType === 'mobile') counts.mobile++;
         counts.total++;
     });
     
@@ -216,7 +248,7 @@ const calculateServiceCounts = (services: Service[]): ServiceCounts => {
 };
 
 // Main Dashboard Component
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const { createApi, createFormDataApi } = useApi();
     
@@ -308,9 +340,9 @@ const Dashboard = () => {
         
         const term = searchTerm.toLowerCase();
         return messages.filter(msg =>
-            msg.username.toLowerCase().includes(term) ||
-            msg.email.toLowerCase().includes(term) ||
-            msg.message.toLowerCase().includes(term) ||
+            msg.username?.toLowerCase().includes(term) ||
+            msg.email?.toLowerCase().includes(term) ||
+            msg.message?.toLowerCase().includes(term) ||
             msg.project_Type?.toLowerCase().includes(term)
         );
     }, [messages, searchTerm]);
@@ -320,9 +352,9 @@ const Dashboard = () => {
         
         const term = searchTerm.toLowerCase();
         return services.filter(service =>
-            service.name.toLowerCase().includes(term) ||
-            service.description.toLowerCase().includes(term) ||
-            service.technologies.some(tech => tech.toLowerCase().includes(term))
+            service.name?.toLowerCase().includes(term) ||
+            service.description?.toLowerCase().includes(term) ||
+            service.technologies?.some(tech => tech.toLowerCase().includes(term))
         );
     }, [services, searchTerm]);
 
@@ -381,21 +413,47 @@ const Dashboard = () => {
                 const api = createApi();
                 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
 
-                const [profileRes, servicesRes, achievementsRes, messagesRes] = await Promise.allSettled([
-                    api.get('/owners/profile'),
+                // Check token validity first
+                try {
+                    const profileRes = await api.get('/owners/profile');
+                    if (profileRes.data.success) {
+                        setUser(profileRes.data.owner);
+                    }
+                } catch (error: any) {
+                    if (error.response?.status === 401) {
+                        localStorage.removeItem('token');
+                        navigate('/auth/user/login');
+                        return;
+                    }
+                }
+
+                // Fetch all data in parallel
+                const [servicesRes, achievementsRes, messagesRes] = await Promise.allSettled([
                     api.get('/user-services'),
                     api.get('/achievements'),
-                    axios.get(`${API_BASE_URL}/api/users/messages`)
+                    axios.get(`${API_BASE_URL}/api/users/messages`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
                 ]);
-
-                // Process profile
-                if (profileRes.status === 'fulfilled' && profileRes.value.data.success) {
-                    setUser(profileRes.value.data.owner);
-                }
 
                 // Process services
                 if (servicesRes.status === 'fulfilled' && servicesRes.value.data.success) {
-                    const servicesData = servicesRes.value.data.data;
+                    const servicesData = servicesRes.value.data.data.map((service: any) => ({
+                        _id: service._id || '',
+                        name: service.name || 'Unnamed Service',
+                        serviceType: service.serviceType || 'web',
+                        description: service.description || '',
+                        price: service.price || 0,
+                        mainImage: service.mainImage || service.image || '/uploads/default-service.png',
+                        images: Array.isArray(service.images) ? service.images : [],
+                        technologies: Array.isArray(service.technologies) ? service.technologies : [],
+                        userId: service.userId || '',
+                        createdAt: service.createdAt || new Date().toISOString(),
+                        updatedAt: service.updatedAt || service.createdAt || new Date().toISOString(),
+                        featured: Boolean(service.featured)
+                    }));
                     setServices(servicesData);
                     setServiceCounts(calculateServiceCounts(servicesData));
                 }
@@ -407,30 +465,59 @@ const Dashboard = () => {
 
                 // Process messages
                 if (messagesRes.status === 'fulfilled' && messagesRes.value.data.success) {
-                    const messagesWithStatus = (messagesRes.value.data.data || []).map((msg: any) => ({
-                        ...msg,
+                    const messagesData = messagesRes.value.data.data || [];
+                    const messagesWithStatus = messagesData.map((msg: any) => ({
+                        _id: msg._id || '',
+                        username: msg.username || '',
+                        email: msg.email || '',
+                        project_Type: msg.project_Type || '',
+                        message: msg.message || '',
+                        createdAt: msg.createdAt || new Date().toISOString(),
+                        read: Boolean(msg.read),
                         status: msg.status || 'new',
-                        read: msg.read || false
+                        phone: msg.phone,
+                        budget: msg.budget,
+                        timeline: msg.timeline,
+                        fileImages: Array.isArray(msg.fileImages) ? msg.fileImages : []
                     }));
                     setMessages(messagesWithStatus);
                 }
 
-                const rejected = [profileRes, servicesRes, achievementsRes, messagesRes]
+                const rejected = [servicesRes, achievementsRes, messagesRes]
                     .filter(result => result.status === 'rejected')
                     .map(result => (result as PromiseRejectedResult).reason);
 
                 if (rejected.length > 0) {
-                    const errorNotif = handleApiError(rejected[0], 'Loading data');
+                    console.warn('Some data failed to load:', rejected);
                     addNotification({
-                        ...errorNotif,
-                        message: 'Partial data loaded. Some features may be limited.'
+                        id: Date.now().toString(),
+                        type: 'warning',
+                        title: 'Partial Data Loaded',
+                        message: 'Some dashboard data could not be loaded. Some features may be limited.',
+                        timestamp: new Date().toLocaleTimeString(),
+                        read: false
                     });
                 }
 
             } catch (error: any) {
-                const errorNotif = handleApiError(error, 'Dashboard initialization');
-                addNotification(errorNotif);
-                setError('Failed to load dashboard data');
+                console.error('Dashboard initialization error:', error);
+                
+                if (error.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    navigate('/auth/user/login');
+                    addNotification({
+                        id: Date.now().toString(),
+                        type: 'error',
+                        title: 'Session Expired',
+                        message: 'Please login again to continue',
+                        timestamp: new Date().toLocaleTimeString(),
+                        read: false
+                    });
+                } else {
+                    const errorNotif = handleApiError(error, 'Dashboard initialization');
+                    addNotification(errorNotif);
+                    setError('Failed to load dashboard data. Please refresh the page.');
+                }
             } finally {
                 setDashboardLoading(false);
             }
@@ -577,6 +664,7 @@ const Dashboard = () => {
                 return true;
             }
             
+            return false;
         } catch (error: any) {
             const errorNotif = handleApiError(error, isEditingService ? 'Updating service' : 'Creating service');
             addNotification(errorNotif);
@@ -591,7 +679,6 @@ const Dashboard = () => {
         
         try {
             const api = createApi();
-            const serviceToDelete = services.find(s => s._id === id);
             
             const response = await api.delete(`/user-services/${id}`);
             
@@ -830,44 +917,55 @@ const Dashboard = () => {
 
     // Export functionality
     const exportData = useCallback((dataType: 'messages' | 'services' | 'achievements') => {
-        let data: any[] = [];
-        let filename = '';
-        
-        switch (dataType) {
-            case 'messages':
-                data = messages;
-                filename = 'messages_export.json';
-                break;
-            case 'services':
-                data = services;
-                filename = 'services_export.json';
-                break;
-            case 'achievements':
-                data = achievements;
-                filename = 'achievements_export.json';
-                break;
+        try {
+            let data: any[] = [];
+            let filename = '';
+            
+            switch (dataType) {
+                case 'messages':
+                    data = messages;
+                    filename = 'messages_export.json';
+                    break;
+                case 'services':
+                    data = services;
+                    filename = 'services_export.json';
+                    break;
+                case 'achievements':
+                    data = achievements;
+                    filename = 'achievements_export.json';
+                    break;
+            }
+            
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addNotification({
+                id: Date.now().toString(),
+                type: 'success',
+                title: 'Export Successful',
+                message: `${data.length} ${dataType} exported successfully`,
+                timestamp: new Date().toLocaleTimeString(),
+                read: false
+            });
+        } catch (error) {
+            addNotification({
+                id: Date.now().toString(),
+                type: 'error',
+                title: 'Export Failed',
+                message: 'Failed to export data. Please try again.',
+                timestamp: new Date().toLocaleTimeString(),
+                read: false
+            });
         }
-        
-        const jsonString = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        addNotification({
-            id: Date.now().toString(),
-            type: 'success',
-            title: 'Export Successful',
-            message: `${data.length} ${dataType} exported successfully`,
-            timestamp: new Date().toLocaleTimeString(),
-            read: false
-        });
     }, [messages, services, achievements]);
 
     // Logout handler
@@ -891,28 +989,10 @@ const Dashboard = () => {
             <Header onLogout={handleLogout} />
             
             {/* Notification Popup */}
-            {activeNotification && (
-                <div className={`notification-popup notification-${activeNotification.type}`}>
-                    <div className="notification-icon">
-                        {activeNotification.type === 'success' && <i className="fas fa-check-circle"></i>}
-                        {activeNotification.type === 'error' && <i className="fas fa-exclamation-triangle"></i>}
-                        {activeNotification.type === 'info' && <i className="fas fa-info-circle"></i>}
-                        {activeNotification.type === 'warning' && <i className="fas fa-exclamation-circle"></i>}
-                    </div>
-                    <div className="notification-content">
-                        <h4 className="notification-title">{activeNotification.title}</h4>
-                        <p className="notification-text">{activeNotification.message}</p>
-                        <small className="notification-time">{activeNotification.timestamp}</small>
-                    </div>
-                    <button 
-                        className="notification-close" 
-                        onClick={() => setActiveNotification(null)}
-                        aria-label="Close notification"
-                    >
-                        <i className="fas fa-times"></i>
-                    </button>
-                </div>
-            )}
+            <NotificationPopup
+                notification={activeNotification}
+                onClose={() => setActiveNotification(null)}
+            />
             
             {/* Profile Header */}
             <div className='profile-header'>
@@ -1123,59 +1203,67 @@ const Dashboard = () => {
                             ) : (
                                 <div className="content-area">
                                     {selectedOption === 'messages' && (
-                                        <DashboardMessages
-                                            messages={paginatedMessages}
-                                            totalMessages={filteredMessages.length}
-                                            currentPage={currentPage}
-                                            itemsPerPage={itemsPerPage}
-                                            onPageChange={setCurrentPage}
-                                            onMarkAsRead={handleMarkAsRead}
-                                            onDeleteMessage={handleDeleteMessage}
-                                            onBulkDeleteMessages={handleBulkDeleteMessages}
-                                            onUpdateMessageStatus={handleUpdateMessageStatus}
-                                            searchTerm={searchTerm}
-                                            onSearchChange={setSearchTerm}
-                                        />
+                                        <ErrorBoundary>
+                                            <DashboardMessages
+                                                messages={paginatedMessages}
+                                                totalMessages={filteredMessages.length}
+                                                currentPage={currentPage}
+                                                itemsPerPage={itemsPerPage}
+                                                onPageChange={setCurrentPage}
+                                                onMarkAsRead={handleMarkAsRead}
+                                                onDeleteMessage={handleDeleteMessage}
+                                                onBulkDeleteMessages={handleBulkDeleteMessages}
+                                                onUpdateMessageStatus={handleUpdateMessageStatus}
+                                                searchTerm={searchTerm}
+                                                onSearchChange={setSearchTerm}
+                                            />
+                                        </ErrorBoundary>
                                     )}
                                     
                                     {selectedOption === 'services' && (
                                         <>
                                             {isCreatingService || isEditingService ? (
-                                                <ServiceForm
-                                                    formData={serviceFormData}
-                                                    isEditing={!!isEditingService}
-                                                    onInputChange={handleServiceInputChange}
-                                                    onFileChange={handleServiceFileChange}
-                                                    onImagesChange={handleServiceImagesChange}
-                                                    onSubmit={handleServiceSubmit}
-                                                    onCancel={resetServiceForm}
-                                                />
+                                                <ErrorBoundary>
+                                                    <ServiceForm
+                                                        formData={serviceFormData}
+                                                        isEditing={!!isEditingService}
+                                                        onInputChange={handleServiceInputChange}
+                                                        onFileChange={handleServiceFileChange}
+                                                        onImagesChange={handleServiceImagesChange}
+                                                        onSubmit={handleServiceSubmit}
+                                                        onCancel={resetServiceForm}
+                                                    />
+                                                </ErrorBoundary>
                                             ) : (
-                                                <ServiceList
-                                                    services={filteredServices}
-                                                    onEditClick={handleServiceEditClick}
-                                                    onDeleteClick={handleServiceDelete}
-                                                    onBulkDelete={handleBulkDeleteServices}
-                                                    serviceCounts={serviceCounts}
-                                                />
+                                                <ErrorBoundary>
+                                                    <ServiceList
+                                                        services={filteredServices}
+                                                        onEditClick={handleServiceEditClick}
+                                                        onDeleteClick={handleServiceDelete}
+                                                        onBulkDelete={handleBulkDeleteServices}
+                                                        serviceCounts={serviceCounts}
+                                                    />
+                                                </ErrorBoundary>
                                             )}
                                         </>
                                     )}
                                     
                                     {selectedOption === 'achievements' && (
-                                        <DashboardAchievements
-                                            achievements={achievements}
-                                            isCreatingAchievement={isCreatingAchievement}
-                                            isEditingAchievement={isEditingAchievement}
-                                            achievementFormData={achievementFormData}
-                                            onAchievementInputChange={handleAchievementInputChange}
-                                            onAchievementFileChange={handleAchievementFileChange}
-                                            onAchievementSubmit={handleAchievementSubmit}
-                                            onAchievementEditClick={handleAchievementEditClick}
-                                            onAchievementDelete={handleAchievementDelete}
-                                            resetAchievementForm={resetAchievementForm}
-                                            getAchievementImageUrl={getAchievementImageUrl}
-                                        />
+                                        <ErrorBoundary>
+                                            <DashboardAchievements
+                                                achievements={achievements}
+                                                isCreatingAchievement={isCreatingAchievement}
+                                                isEditingAchievement={isEditingAchievement}
+                                                achievementFormData={achievementFormData}
+                                                onAchievementInputChange={handleAchievementInputChange}
+                                                onAchievementFileChange={handleAchievementFileChange}
+                                                onAchievementSubmit={handleAchievementSubmit}
+                                                onAchievementEditClick={handleAchievementEditClick}
+                                                onAchievementDelete={handleAchievementDelete}
+                                                resetAchievementForm={resetAchievementForm}
+                                                getAchievementImageUrl={getAchievementImageUrl}
+                                            />
+                                        </ErrorBoundary>
                                     )}
                                     
                                     {selectedOption === 'analytics' && (
@@ -1209,7 +1297,7 @@ const Dashboard = () => {
                                                             <div className="distribution-bar">
                                                                 <div 
                                                                     className="distribution-fill web-fill"
-                                                                    style={{ width: `${(serviceCounts.web / serviceCounts.total) * 100 || 0}%` }}
+                                                                    style={{ width: `${(serviceCounts.web / Math.max(serviceCounts.total, 1)) * 100 || 0}%` }}
                                                                 ></div>
                                                             </div>
                                                             <span className="distribution-value">{serviceCounts.web}</span>
@@ -1219,7 +1307,7 @@ const Dashboard = () => {
                                                             <div className="distribution-bar">
                                                                 <div 
                                                                     className="distribution-fill design-fill"
-                                                                    style={{ width: `${(serviceCounts.design / serviceCounts.total) * 100 || 0}%` }}
+                                                                    style={{ width: `${(serviceCounts.design / Math.max(serviceCounts.total, 1)) * 100 || 0}%` }}
                                                                 ></div>
                                                             </div>
                                                             <span className="distribution-value">{serviceCounts.design}</span>
@@ -1229,7 +1317,7 @@ const Dashboard = () => {
                                                             <div className="distribution-bar">
                                                                 <div 
                                                                     className="distribution-fill mobile-fill"
-                                                                    style={{ width: `${(serviceCounts.mobile / serviceCounts.total) * 100 || 0}%` }}
+                                                                    style={{ width: `${(serviceCounts.mobile / Math.max(serviceCounts.total, 1)) * 100 || 0}%` }}
                                                                 ></div>
                                                             </div>
                                                             <span className="distribution-value">{serviceCounts.mobile}</span>
