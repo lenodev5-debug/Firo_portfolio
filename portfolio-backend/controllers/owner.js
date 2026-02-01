@@ -57,7 +57,7 @@ exports.createOwner = async (req, res) => {
                 username: newOwner.username
             },
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '30d' }
         );
         
         const ownerResponse = newOwner.toObject();

@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const imagesSchema = new mongoose.Schema({
+    url: { type: String, required: true },
+    description: { type: String },
+    altText: { type: String },
+    order: { type: Number },
+    ifFeatured: { type: Boolean, default: false }
+});
+
 const UserServiceSchema = new mongoose.Schema({
     name: { type: String, required: true },
     serviceType: { type: String, enum: ['web', 'mobile', 'design'], required: true },
@@ -7,6 +15,7 @@ const UserServiceSchema = new mongoose.Schema({
     description: { type: String, required: true },
     price: { type: Number, required: true },
     image: { type: String, required: true },
+    images: [imagesSchema],
     userId: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

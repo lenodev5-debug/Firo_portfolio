@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
 import Header from './Header';
 import Profile from '../assets/bak/lenodevprofile.jpg';
 import WebIcon from '../assets/icon/web-design (1).png';
@@ -8,7 +8,8 @@ import CubeIcon from '../assets/icon/cube.png';
 import MobileIcon from '../assets/icon/mobile.png';
 
 import DashboardMessages from './Components/DashboardMessages';
-import DashboardServices from './Components/DashboardServices';
+import ServiceList from './Components/ServiceList';
+import ServiceForm from './Components/ServiceForm';
 import DashboardAchievements from './Components/DashboardAchievements';
 
 // Interfaces
@@ -55,18 +56,39 @@ interface Achievement {
     tags?: string[];
 }
 
+interface ImageWithDescription {
+    url: string;
+    description: string;
+    altText?: string;
+    order?: number;
+    isFeatured?: boolean;
+    file?: File;
+}
+
 interface Service {
     _id: string;
     name: string;
     serviceType: 'web' | 'mobile' | 'design';
     description: string;
     price: number;
-    image: string;
+    mainImage: string;
+    images: ImageWithDescription[];
     technologies: string[];
     userId: string;
     createdAt: string;
     updatedAt: string;
     featured?: boolean;
+}
+
+interface ServiceFormData {
+    name: string;
+    serviceType: 'web' | 'mobile' | 'design';
+    description: string;
+    price: string;
+    technologies: string;
+    mainImage: File | null;
+    featured: boolean;
+    images: ImageWithDescription[];
 }
 
 interface ServiceCounts {
@@ -97,7 +119,7 @@ const useApi = () => {
         return token;
     };
 
-    const createApi = (): AxiosInstance => {
+    const createApi = (): import("axios").AxiosInstance => {
         const token = getAuthToken();
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
         
@@ -111,7 +133,7 @@ const useApi = () => {
         });
     };
 
-    const createFormDataApi = (): AxiosInstance => {
+    const createFormDataApi = (): import("axios").AxiosInstance => {
         const token = getAuthToken();
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
         
@@ -121,7 +143,7 @@ const useApi = () => {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data'
             },
-            timeout: 15000
+            timeout: 30000
         });
     };
 
@@ -182,84 +204,6 @@ const useNotifications = () => {
     };
 };
 
-const useDashboardData = () => {
-    const [user, setUser] = useState<UserProfile | null>(null);
-    const [dashboardLoading, setDashboardLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
-    const { createApi } = useApi();
-
-    const fetchDashboardData = useCallback(async () => {
-        try {
-            setDashboardLoading(true);
-            const token = localStorage.getItem('token');
-            
-            if (!token) {
-                navigate('/auth/user/login');
-                return;
-            }
-
-            const api = createApi();
-            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
-
-            // Fetch all data in parallel - FIXED MESSAGES ENDPOINT
-            const [profileRes, servicesRes, achievementsRes, messagesRes] = await Promise.allSettled([
-                api.get('/owners/profile'),
-                api.get('/user-services'),
-                api.get('/achievements'),
-                // FIXED: Changed from '/users/contact/messages' to '/users/messages'
-                axios.get(`${API_BASE_URL}/api/users/messages`)
-            ]);
-
-            // Handle profile data
-            if (profileRes.status === 'fulfilled' && profileRes.value.data.success) {
-                setUser(profileRes.value.data.owner);
-            }
-
-            // Handle services data
-            if (servicesRes.status === 'fulfilled' && servicesRes.value.data.success) {
-                return {
-                    services: servicesRes.value.data.data,
-                    serviceCounts: calculateServiceCounts(servicesRes.value.data.data)
-                };
-            }
-
-            // Handle achievements data
-            if (achievementsRes.status === 'fulfilled' && achievementsRes.value.data.success) {
-                return {
-                    achievements: achievementsRes.value.data.data
-                };
-            }
-
-            // Handle messages data
-            if (messagesRes.status === 'fulfilled' && messagesRes.value.data.success) {
-                const messagesWithStatus = (messagesRes.value.data.data || []).map((msg: any) => ({
-                    ...msg,
-                    status: msg.status || 'new',
-                    read: msg.read || false
-                }));
-                return { messages: messagesWithStatus };
-            }
-
-        } catch (error: any) {
-            console.error('Error in dashboard setup:', error);
-            setError('Failed to load dashboard data. Some features may be unavailable.');
-            throw error;
-        } finally {
-            setDashboardLoading(false);
-        }
-    }, [navigate]);
-
-    return {
-        user,
-        dashboardLoading,
-        error,
-        fetchDashboardData,
-        setDashboardLoading,
-        setError
-    };
-};
-
 const calculateServiceCounts = (services: Service[]): ServiceCounts => {
     const counts = { web: 0, design: 0, mobile: 0, total: 0 };
     
@@ -297,19 +241,21 @@ const Dashboard = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     
-    // CRUD States
+    // Service CRUD States
     const [isCreatingService, setIsCreatingService] = useState(false);
     const [isEditingService, setIsEditingService] = useState<string | null>(null);
-    const [serviceFormData, setServiceFormData] = useState({
+    const [serviceFormData, setServiceFormData] = useState<ServiceFormData>({
         name: '',
-        serviceType: 'web' as 'web' | 'mobile' | 'design',
+        serviceType: 'web',
         description: '',
         price: '',
         technologies: '',
-        image: null as File | null,
-        featured: false
+        mainImage: null,
+        featured: false,
+        images: []
     });
     
+    // Achievement CRUD States
     const [isCreatingAchievement, setIsCreatingAchievement] = useState(false);
     const [isEditingAchievement, setIsEditingAchievement] = useState<string | null>(null);
     const [achievementFormData, setAchievementFormData] = useState({
@@ -331,8 +277,6 @@ const Dashboard = () => {
         clearAll,
         setActiveNotification
     } = useNotifications();
-
-    const dashboardData = useDashboardData();
 
     // Computed values
     const unreadMessagesCount = useMemo(() => 
@@ -423,7 +367,7 @@ const Dashboard = () => {
         };
     }, []);
 
-    // Data Fetching - FIXED MESSAGES ENDPOINT HERE TOO
+    // Data Fetching
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -437,12 +381,10 @@ const Dashboard = () => {
                 const api = createApi();
                 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
 
-                // Fetch all data in parallel - FIXED MESSAGES ENDPOINT
                 const [profileRes, servicesRes, achievementsRes, messagesRes] = await Promise.allSettled([
                     api.get('/owners/profile'),
                     api.get('/user-services'),
                     api.get('/achievements'),
-                    // FIXED: Changed from '/users/contact/messages' to '/users/messages'
                     axios.get(`${API_BASE_URL}/api/users/messages`)
                 ]);
 
@@ -473,7 +415,6 @@ const Dashboard = () => {
                     setMessages(messagesWithStatus);
                 }
 
-                // Handle rejected promises
                 const rejected = [profileRes, servicesRes, achievementsRes, messagesRes]
                     .filter(result => result.status === 'rejected')
                     .map(result => (result as PromiseRejectedResult).reason);
@@ -520,9 +461,16 @@ const Dashboard = () => {
         if (e.target.files && e.target.files[0]) {
             setServiceFormData(prev => ({
                 ...prev,
-                image: e.target.files![0]
+                mainImage: e.target.files![0]
             }));
         }
+    };
+
+    const handleServiceImagesChange = (images: ImageWithDescription[]) => {
+        setServiceFormData(prev => ({
+            ...prev,
+            images: images
+        }));
     };
 
     const resetServiceForm = () => {
@@ -532,8 +480,9 @@ const Dashboard = () => {
             description: '',
             price: '',
             technologies: '',
-            image: null,
-            featured: false
+            mainImage: null,
+            featured: false,
+            images: []
         });
         setIsCreatingService(false);
         setIsEditingService(null);
@@ -548,30 +497,45 @@ const Dashboard = () => {
             description: service.description,
             price: service.price.toString(),
             technologies: service.technologies?.join(', ') || '',
-            image: null,
-            featured: service.featured || false
+            mainImage: null,
+            featured: service.featured || false,
+            images: service.images || []
         });
     };
 
-    const handleServiceSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
+    const handleServiceSubmit = async (formData: ServiceFormData, additionalImages: File[]) => {
         try {
             const api = createFormDataApi();
             
             const formDataToSend = new FormData();
-            formDataToSend.append('name', serviceFormData.name.trim());
-            formDataToSend.append('serviceType', serviceFormData.serviceType);
-            formDataToSend.append('description', serviceFormData.description.trim());
-            formDataToSend.append('price', serviceFormData.price);
-            formDataToSend.append('featured', serviceFormData.featured.toString());
+            formDataToSend.append('name', formData.name.trim());
+            formDataToSend.append('serviceType', formData.serviceType);
+            formDataToSend.append('description', formData.description.trim());
+            formDataToSend.append('price', formData.price);
+            formDataToSend.append('featured', formData.featured.toString());
             
-            if (serviceFormData.technologies) {
-                formDataToSend.append('technologies', serviceFormData.technologies);
+            if (formData.technologies) {
+                formDataToSend.append('technologies', formData.technologies);
             }
             
-            if (serviceFormData.image) {
-                formDataToSend.append('image', serviceFormData.image);
+            if (formData.mainImage) {
+                formDataToSend.append('mainImage', formData.mainImage);
+            }
+            
+            // Append additional images
+            additionalImages.forEach((file, index) => {
+                formDataToSend.append('images', file);
+            });
+            
+            // Append image descriptions
+            if (formData.images.length > 0) {
+                const imageData = formData.images.map((img, index) => ({
+                    description: img.description || '',
+                    altText: img.altText || img.description || 'Service image',
+                    order: index,
+                    isFeatured: index === 0
+                }));
+                formDataToSend.append('imageDescriptions', JSON.stringify(imageData));
             }
 
             let response;
@@ -593,7 +557,6 @@ const Dashboard = () => {
                     setServices(prev => [updatedService, ...prev]);
                 }
                 
-                // Update counts
                 const updatedCounts = calculateServiceCounts(
                     isEditingService 
                         ? services.map(s => s._id === isEditingService ? updatedService : s)
@@ -601,7 +564,6 @@ const Dashboard = () => {
                 );
                 setServiceCounts(updatedCounts);
                 
-                // Add success notification
                 addNotification({
                     id: Date.now().toString(),
                     type: 'success',
@@ -612,11 +574,13 @@ const Dashboard = () => {
                 });
                 
                 resetServiceForm();
+                return true;
             }
             
         } catch (error: any) {
             const errorNotif = handleApiError(error, isEditingService ? 'Updating service' : 'Creating service');
             addNotification(errorNotif);
+            return false;
         }
     };
 
@@ -634,7 +598,6 @@ const Dashboard = () => {
             if (response.data.success) {
                 setServices(prev => prev.filter(service => service._id !== id));
                 
-                // Update counts
                 const updatedCounts = calculateServiceCounts(
                     services.filter(s => s._id !== id)
                 );
@@ -664,14 +627,11 @@ const Dashboard = () => {
         try {
             const api = createApi();
             
-            // You might want to implement a bulk delete endpoint
-            // For now, delete one by one
             const deletePromises = ids.map(id => api.delete(`/user-services/${id}`));
             await Promise.all(deletePromises);
             
             setServices(prev => prev.filter(service => !ids.includes(service._id)));
             
-            // Update counts
             const updatedCounts = calculateServiceCounts(
                 services.filter(s => !ids.includes(s._id))
             );
@@ -1179,20 +1139,27 @@ const Dashboard = () => {
                                     )}
                                     
                                     {selectedOption === 'services' && (
-                                        <DashboardServices
-                                            services={filteredServices}
-                                            isCreatingService={isCreatingService}
-                                            isEditingService={isEditingService}
-                                            serviceFormData={serviceFormData}
-                                            onServiceInputChange={handleServiceInputChange}
-                                            onServiceFileChange={handleServiceFileChange}
-                                            onServiceSubmit={handleServiceSubmit}
-                                            onServiceEditClick={handleServiceEditClick}
-                                            onServiceDelete={handleServiceDelete}
-                                            onBulkDeleteServices={handleBulkDeleteServices}
-                                            resetServiceForm={resetServiceForm}
-                                            serviceCounts={serviceCounts}
-                                        />
+                                        <>
+                                            {isCreatingService || isEditingService ? (
+                                                <ServiceForm
+                                                    formData={serviceFormData}
+                                                    isEditing={!!isEditingService}
+                                                    onInputChange={handleServiceInputChange}
+                                                    onFileChange={handleServiceFileChange}
+                                                    onImagesChange={handleServiceImagesChange}
+                                                    onSubmit={handleServiceSubmit}
+                                                    onCancel={resetServiceForm}
+                                                />
+                                            ) : (
+                                                <ServiceList
+                                                    services={filteredServices}
+                                                    onEditClick={handleServiceEditClick}
+                                                    onDeleteClick={handleServiceDelete}
+                                                    onBulkDelete={handleBulkDeleteServices}
+                                                    serviceCounts={serviceCounts}
+                                                />
+                                            )}
+                                        </>
                                     )}
                                     
                                     {selectedOption === 'achievements' && (

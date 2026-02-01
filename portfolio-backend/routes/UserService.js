@@ -1,7 +1,8 @@
+// routes/UserService.js
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authService');
-const { uploadImage } = require('../middleware/upload'); // ADD THIS IMPORT
+const { uploadImage, uploadMultipleImages } = require('../middleware/upload'); // UPDATE IMPORT
 const { 
     createUserService, 
     getUserServices,
@@ -16,9 +17,9 @@ router.get('/', getUserServices);
 router.get('/:id', getUserServiceById); 
 router.get('/stats/count-by-type', countProject)
 
-// ADD uploadImage.single('image') middleware to POST and PUT routes
-router.post('/', authMiddleware, uploadImage.single('image'), createUserService); // FIXED
-router.put('/:id', authMiddleware, uploadImage.single('image'), updateUserService); // FIXED
+// UPDATE: Use uploadMultipleImages for multiple images
+router.post('/', authMiddleware, uploadImage.single('mainImage'), uploadMultipleImages, createUserService);
+router.put('/:id', authMiddleware, uploadImage.single('mainImage'), uploadMultipleImages, updateUserService);
 router.delete('/:id', authMiddleware, deleteUserService); 
 router.get('/user/my-services', authMiddleware, getMyServices); 
 
