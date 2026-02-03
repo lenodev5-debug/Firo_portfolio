@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SafeImage from './SafeImage';
+import SafeImage from './safeimage';
 
 interface ImageWithDescription {
     url: string;
