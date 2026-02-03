@@ -127,7 +127,7 @@ export default function Header() {
         <header className={`header-container ${isHeaderVisible ? 'visible' : 'hidden'}`}>
             <div className="header-content">
                 <h1 className="logo">
-                    Leno,Dev
+                    Luno,Dev
                 </h1>
                 
                 {/* Desktop Navigation */}
