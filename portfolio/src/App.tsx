@@ -12,6 +12,7 @@ import Contact from "./components/contact";
 import Dashboard from "./components/Dashboard";
 import Auth from "./components/page/auth";
 import ProtectedRoute from "./service/ProtectedRoute";
+import AboutMe from "./components/AboutMe.tsx"
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -55,6 +56,21 @@ function App() {
             <Dashboard />
           </ProtectedRoute>
         } />
+
+        {/* other route */}
+        <Route path="/about" element={<>
+          <Header />
+          <About/>
+          <footer />
+          <Contact />
+        </>}
+         />
+         <Route path="/project" element={<>
+          <Header />
+          <ProjectDisplay />
+          <Contact />
+         </>
+          }/>
       </Routes>
     </Router>
   );

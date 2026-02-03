@@ -134,8 +134,8 @@ export default function Header() {
                 <nav className="desktop-nav">
                     <ul>
                         <li><Link to="/" onClick={handleNavClick}>Home</Link></li>
-                        <li><Link to="/" onClick={closeMenu}>About</Link></li>
-                        <li><Link to="/" onClick={closeMenu}>Project</Link></li>
+                        <li><Link to="/about" onClick={closeMenu}>About</Link></li>
+                        <li><Link to="/project" onClick={closeMenu}>Project</Link></li>
                         <li><Link to="/" onClick={closeMenu}>Contact</Link></li>
                         
                         {/* Dashboard/Login buttons for desktop */}
@@ -177,8 +177,8 @@ export default function Header() {
                 <nav className={`mobile-nav ${isMenuOpen ? 'open' : ''}`}>
                     <ul>
                         <li><Link to="/" onClick={handleNavClick}>Home</Link></li>
-                        <li><Link to="/" onClick={closeMenu}>About</Link></li>
-                        <li><Link to="/" onClick={closeMenu}>Project</Link></li>
+                        <li><Link to="/about" onClick={closeMenu}>About</Link></li>
+                        <li><Link to="/project" onClick={closeMenu}>Project</Link></li>
                         <li><Link to="/" onClick={closeMenu}>Contact</Link></li>
                         
                         <li className="menu-separator"></li>
