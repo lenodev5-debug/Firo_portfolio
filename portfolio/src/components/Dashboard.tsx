@@ -13,7 +13,6 @@ import ServiceList from './Components/ServiceList';
 import DashboardAchievements from './Components/DashboardAchievements';
 import ErrorBoundary from './Components/ErrorBoundary';
 import NotificationPopup from './Components/NotificationPopup';
-
 // Interfaces
 interface UserProfile {
     _id: string;

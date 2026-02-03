@@ -289,13 +289,6 @@ export default function Loading({ onLoadingComplete }) {
                     fontFamily: "ICA Rubrik, sans-serif"
                 }}>
                     loading... {progress}%
-                    <div style={{ 
-                        fontSize: "14px", 
-                        marginTop: "10px",
-                        opacity: 0.7 
-                    }}>
-                        Preloaded: {loadedAssets.length} assets
-                    </div>
                 </div>
             </div>
         </div>

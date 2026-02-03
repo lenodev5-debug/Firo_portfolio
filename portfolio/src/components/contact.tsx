@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-
 const Contact = () => {
     const [formData, setFormData] = useState({
         name: '',
