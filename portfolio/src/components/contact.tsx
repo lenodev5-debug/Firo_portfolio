@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -16,38 +16,28 @@ const Contact = () => {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [activeFaq, setActiveFaq] = useState<number | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
-    // Animated background particles
+    // Handle video background
     useEffect(() => {
-        const createParticles = () => {
-            const container = document.querySelector('.contact-bg-animation');
-            if (!container) return;
-
-            // Clear existing particles
-            container.innerHTML = '';
-
-            // Create 20 particles
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'contact-particle';
-                particle.style.width = `${Math.random() * 100 + 50}px`;
-                particle.style.height = particle.style.width;
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.top = `${Math.random() * 100}%`;
-                particle.style.animationDelay = `${Math.random() * 20}s`;
-                particle.style.animationDuration = `${Math.random() * 20 + 10}s`;
-                container.appendChild(particle);
+        const video = videoRef.current;
+        if (video) {
+            video.playbackRate = 0.8; // Slow down video slightly
+            video.muted = true;
+            video.play().catch(e => console.log("Video autoplay failed:", e));
+        }
+        
+        // Handle mobile touch to play
+        const handleTouch = () => {
+            if (video && video.paused) {
+                video.play().catch(e => console.log("Video play failed:", e));
             }
         };
-
-        createParticles();
         
-        // Recreate particles on window resize
-        const handleResize = () => createParticles();
-        window.addEventListener('resize', handleResize);
+        document.addEventListener('touchstart', handleTouch, { once: true });
         
         return () => {
-            window.removeEventListener('resize', handleResize);
+            document.removeEventListener('touchstart', handleTouch);
         };
     }, []);
 
@@ -214,7 +204,21 @@ const Contact = () => {
 
     return (
         <div className="contact-container">
-            <div className="contact-bg-animation"></div>
+            {/* Video Background */}
+            <div className="video-background">
+                <video
+                    ref={videoRef}
+                    className="background-video"
+                    src="/src/assets/video/contact.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    poster="/src/assets/video/contact-poster.jpg" // Add a poster image for mobile
+                />
+                <div className="video-overlay"></div>
+            </div>
             
             {/* Error Message Display */}
             {error && (
@@ -280,16 +284,28 @@ const Contact = () => {
                                 </a>
                             </div>
 
-                            <div className="info-card">
+                            <div className="info-card video-card">
                                 <div className="card-icon">
-                                    <i className="fas fa-map-marker-alt"></i>
+                                    <i className="fas fa-video"></i>
                                 </div>
-                                <h3 className="card-title">Location</h3>
-                                <p className="card-content">Based in Jijiga, Ethiopia<br />Working with clients worldwide</p>
-                                <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="card-link">
-                                    View on Map
-                                    <i className="fas fa-arrow-right"></i>
-                                </a>
+                                <h3 className="card-title">Video Background</h3>
+                                <p className="card-content">Experience the atmosphere. This background video represents my creative process.</p>
+                                <button 
+                                    className="card-link video-toggle"
+                                    onClick={() => {
+                                        const video = videoRef.current;
+                                        if (video) {
+                                            if (video.muted) {
+                                                video.muted = false;
+                                            } else {
+                                                video.muted = true;
+                                            }
+                                        }
+                                    }}
+                                >
+                                    {videoRef.current?.muted ? 'Unmute Video' : 'Mute Video'}
+                                    <i className="fas fa-volume-up"></i>
+                                </button>
                             </div>
 
                         </div>
