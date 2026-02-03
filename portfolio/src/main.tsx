@@ -12,7 +12,6 @@ import './style/about1.css'
 import './style/achivements.css'
 import './style/contact.css'
 import './style/service.css'
-import "./style/dashboard.css"
 import './style/login.css'
 import './style/dashboard.css'
 
