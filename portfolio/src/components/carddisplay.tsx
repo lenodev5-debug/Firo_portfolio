@@ -1,101 +1,224 @@
-import Mobile from '../assets/icon/mobile.png';
-import Cube from '../assets/icon/cube.png';
-import Web from '../assets/icon/web-design (1).png';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+import Mobile from "../assets/icon/mobile.png";
+import Cube from "../assets/icon/cube.png";
+import Web from "../assets/icon/web-design (1).png";
+
+import StarryNight from "./bg/background";
 
 interface Service {
     _id: string;
-    serviceType: 'web' | 'mobile' | 'design';
-    // other properties...
+    serviceType: "web" | "mobile" | "design";
+}
+
+interface ServiceCount {
+    web: number;
+    mobile: number;
+    design: number;
 }
 
 export default function CardDisplay() {
-    const [count, setCount] = useState({ web: 0, mobile: 0, design: 0 });
+    const [count, setCount] = useState<ServiceCount>({
+        web: 0,
+        mobile: 0,
+        design: 0,
+    });
+
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let cancelled = false;
+
         const fetchCounts = async () => {
+            const API_BASE_URL =
+                import.meta.env.VITE_API_BASE_URL ||
+                "https://lenodev-production.up.railway.app";
+
             try {
-                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lenodev-production.up.railway.app';
-                
-                // Option 1: Try the stats endpoint first
+                // First, try the statistics endpoint.
                 try {
-                    const statsResponse = await axios.get(`${API_BASE_URL}/api/user-services/stats/count-by-type`);
+                    const statsResponse = await axios.get(
+                        `${API_BASE_URL}/api/user-services/stats/count-by-type`
+                    );
+
                     if (statsResponse.data.success) {
-                        const countObj = { web: 0, mobile: 0, design: 0 };
-                        statsResponse.data.data.forEach((item: any) => {
-                            countObj[item._id] = item.count;
-                        });
-                        setCount(countObj);
-                        setLoading(false);
+                        const countObj: ServiceCount = {
+                            web: 0,
+                            mobile: 0,
+                            design: 0,
+                        };
+
+                        statsResponse.data.data.forEach(
+                            (item: { _id: string; count: number }) => {
+                                if (
+                                    item._id === "web" ||
+                                    item._id === "mobile" ||
+                                    item._id === "design"
+                                ) {
+                                    countObj[item._id] = item.count;
+                                }
+                            }
+                        );
+
+                        if (!cancelled) {
+                            setCount(countObj);
+                        }
+
                         return;
                     }
                 } catch (statsError) {
-                    console.log('Stats endpoint failed, trying services endpoint...');
+                    console.warn(
+                        "Stats endpoint failed. Trying the services endpoint.",
+                        statsError
+                    );
                 }
-                
-                // Option 2: Fetch all services and count manually (like dashboard does)
-                const servicesResponse = await axios.get(`${API_BASE_URL}/api/user-services`);
+
+                // Fallback: fetch all services and count manually.
+                const servicesResponse = await axios.get(
+                    `${API_BASE_URL}/api/user-services`
+                );
+
                 if (servicesResponse.data.success) {
-                    const services = servicesResponse.data.data;
-                    const calculatedCounts = {
-                        web: services.filter((s: Service) => s.serviceType === 'web').length,
-                        design: services.filter((s: Service) => s.serviceType === 'design').length,
-                        mobile: services.filter((s: Service) => s.serviceType === 'mobile').length
+                    const services: Service[] =
+                        servicesResponse.data.data;
+
+                    const calculatedCounts: ServiceCount = {
+                        web: services.filter(
+                            (service) => service.serviceType === "web"
+                        ).length,
+
+                        mobile: services.filter(
+                            (service) => service.serviceType === "mobile"
+                        ).length,
+
+                        design: services.filter(
+                            (service) => service.serviceType === "design"
+                        ).length,
                     };
-                    setCount(calculatedCounts);
+
+                    if (!cancelled) {
+                        setCount(calculatedCounts);
+                    }
                 }
-                
             } catch (error) {
-                console.error('Error fetching counts:', error);
+                console.error("Error fetching service counts:", error);
             } finally {
-                setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
         };
-        
+
         fetchCounts();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
-    if (loading) {
-        return (
-            <div className="card-display">
-                <div className="card">
-                    <div className="skeleton-img"></div>
-                    <h1>Full-Stack Development</h1>
-                    <h3>Loading...</h3>
-                </div>
-                <div className="card">
-                    <div className="skeleton-img"></div>
-                    <h1>Product Design</h1>
-                    <h3>Loading...</h3>
-                </div>
-                <div className="card">
-                    <div className="skeleton-img"></div>
-                    <h1>Mobile App Development</h1>
-                    <h3>Loading...</h3>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="card-display">
-            <div className="card">
-                <img src={Web} alt="Web Development" />
-                <h1>Full-Stack Development</h1>
-                <h3>{count.web} projects</h3>
+        <section className="services-section">
+            {/* Animated starry night background */}
+            <StarryNight />
+
+            {/* Content stays above the background */}
+            <div className="services-content">
+                <div className="services-heading">
+                    <p className="services-eyebrow">WHAT I DO</p>
+
+                    <h2>My Services</h2>
+
+                    <p className="services-subtitle">
+                        Turning ideas into digital experiences through
+                        development, design, and technology.
+                    </p>
+                </div>
+
+                <div className="card-display">
+                    {/* Full-Stack Development */}
+                    <div className="card">
+                        {loading ? (
+                            <>
+                                <div className="skeleton-img" />
+                                <h1>Full-Stack Development</h1>
+                                <h3>Loading...</h3>
+                            </>
+                        ) : (
+                            <>
+                                <img
+                                    src={Web}
+                                    alt="Web Development"
+                                />
+
+                                <h1>Full-Stack Development</h1>
+
+                                <h3>
+                                    {count.web}{" "}
+                                    {count.web === 1
+                                        ? "project"
+                                        : "projects"}
+                                </h3>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Product Design */}
+                    <div className="card">
+                        {loading ? (
+                            <>
+                                <div className="skeleton-img" />
+                                <h1>Product Design</h1>
+                                <h3>Loading...</h3>
+                            </>
+                        ) : (
+                            <>
+                                <img
+                                    src={Cube}
+                                    alt="Product Design"
+                                />
+
+                                <h1>Product Design</h1>
+
+                                <h3>
+                                    {count.design}{" "}
+                                    {count.design === 1
+                                        ? "project"
+                                        : "projects"}
+                                </h3>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Mobile App Development */}
+                    <div className="card">
+                        {loading ? (
+                            <>
+                                <div className="skeleton-img" />
+                                <h1>Mobile App Development</h1>
+                                <h3>Loading...</h3>
+                            </>
+                        ) : (
+                            <>
+                                <img
+                                    src={Mobile}
+                                    alt="Mobile App Development"
+                                />
+
+                                <h1>Mobile App Development</h1>
+
+                                <h3>
+                                    {count.mobile}{" "}
+                                    {count.mobile === 1
+                                        ? "project"
+                                        : "projects"}
+                                </h3>
+                            </>
+                        )}
+                    </div>
+                </div>
             </div>
-            <div className="card">
-                <img src={Cube} alt="Product Design" />
-                <h1>Product Design</h1>
-                <h3>{count.design} projects</h3>
-            </div>
-            <div className="card">
-                <img src={Mobile} alt="Mobile Development" />
-                <h1>Mobile App Development</h1>
-                <h3>{count.mobile} projects</h3>
-            </div>
-        </div>
+        </section>
     );
 }

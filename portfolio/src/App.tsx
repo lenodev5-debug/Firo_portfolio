@@ -12,7 +12,7 @@ import Contact from "./components/contact";
 import Dashboard from "./components/Dashboard";
 import Auth from "./components/page/auth";
 import ProtectedRoute from "./service/ProtectedRoute";
-import AboutMe from "./components/AboutMe.tsx"
+// import AboutMe from "./components/AboutMe.tsx"
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
